@@ -55,19 +55,3 @@ class Plotter:
 
 
 
-
-        #plt.figure(figsize=(12, 6))
-        #plt.plot(data.index, data[column], label=column, color='blue', linewidth=1.5)
-        ## Overlay indicators
-        #for name, (series, params) in indicators.items():
-        #    series = series.dropna()
-        #    param_str = ",".join(map(str, params))
-        #    plt.plot(series.index, series, label=f"{name} ({param_str})", linewidth=1.2)
-#
-        #plt.title(f"{self.title} - {company_name}")
-        #plt.xlabel("Date")
-        #plt.ylabel("Price")
-        #plt.legend()
-        #plt.grid()
-        #plt.show()
-
