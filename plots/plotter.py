@@ -50,10 +50,11 @@ class Plotter:
             bbands_data, params = indicators["BBANDS"]
             upper_band = bbands_data["upper_band"]
             lower_band = bbands_data["lower_band"]
-            ax_bbands.plot(data.index, data[column], label="Close price", color='blue', linewidth=1.2)
+            middle_band = bbands_data["middle_band"]
+            ax_bbands.plot(bbands_data.index, middle_band, label="Middle Band", color='blue', linewidth=1.2)
             ax_bbands.plot(bbands_data.index, upper_band, label="Upper Band", color='red', linestyle='--', linewidth=1.2)
             ax_bbands.plot(bbands_data.index, lower_band, label="Lower Band", color='green', linestyle='--', linewidth=1.2)
-            ax_bbands.fill_between(bbands_data.index, lower_band, upper_band, color='grey', alpha=0.3, label="BBANDS Range")
+            ax_bbands.fill_between(bbands_data.index, lower_band, upper_band, color='grey', alpha=0.3)
             ax_bbands.set_ylabel("BBANDS")
             ax_bbands.legend()
             ax_bbands.grid()

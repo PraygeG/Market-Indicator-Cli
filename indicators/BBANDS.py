@@ -20,6 +20,7 @@ class BBANDS(BaseIndicator):
         lower_band = middle_band - (self.standard_dev_num * std_deviation)
 
         result = pd.DataFrame(index=data.index)
+        result['middle_band'] = middle_band
         result['upper_band'] = upper_band
         result['lower_band'] = lower_band
 
