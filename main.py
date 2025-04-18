@@ -5,6 +5,7 @@ from data_sources.yfinance_source import YfinanceSource
 from indicators.EMA import EMA
 from indicators.SMA import SMA
 from indicators.RSI import RSI
+from indicators.BBANDS import BBANDS
 from indicators.MACD import MACD
 from plots.plotter import Plotter
 from validators.input_validators import validate_date, get_valid_interval, get_valid_indicators, get_valid_tickers
@@ -13,7 +14,8 @@ INDICATOR_CLASSES = {
     "EMA": EMA,
     "SMA": SMA,
     "RSI": RSI,
-    "MACD": MACD
+    "MACD": MACD,
+    "BBANDS": BBANDS
 }
 
 @click.command()

@@ -9,7 +9,8 @@ supported_indicators = {
     "EMA": (1, lambda p: p.isdigit() and int(p)>0),
     "SMA": (1, lambda p: p.isdigit() and int(p)>0),
     "RSI": (1, lambda p: p.isdigit() and int(p)>0),
-    "MACD": (3, lambda p: p.isdigit() and int(p)>0)
+    "MACD": (3, lambda p: p.isdigit() and int(p)>0),
+    "BBANDS": (2, lambda p: p.isdigit() and int(p)>0)
 }
 
 def get_valid_tickers(tickers_str: str | None)-> list[str]:
@@ -105,6 +106,8 @@ def validate_indicators(indicator_str: str)-> tuple[bool, str]:
 
         if name == "MACD" and '-' in param:
             param_list = param.split('-')
+        elif name == "BBANDS" and '-' in param:
+            param_list = param.split('-')
         else:
             param_list = param.split(',')
 
@@ -144,6 +147,8 @@ def get_valid_indicators(indicators: str)-> list[tuple[str, list[int]]]:
         name = name.strip().upper()
 
         if name == "MACD" and '-' in param_str:
+            params = [int(p.strip()) for p in param_str.split('-')]
+        elif name == "BBANDS" and '-' in param_str:
             params = [int(p.strip()) for p in param_str.split('-')]
         else:
             params = [int(p.strip()) for p in param_str.split(',')]
