@@ -5,13 +5,15 @@ from data_sources.yfinance_source import YfinanceSource
 from indicators.EMA import EMA
 from indicators.SMA import SMA
 from indicators.RSI import RSI
+from indicators.MACD import MACD
 from plots.plotter import Plotter
 from validators.input_validators import validate_date, get_valid_interval, get_valid_indicators, get_valid_tickers
 
 INDICATOR_CLASSES = {
     "EMA": EMA,
     "SMA": SMA,
-    "RSI": RSI
+    "RSI": RSI,
+    "MACD": MACD
 }
 
 @click.command()
@@ -20,7 +22,7 @@ INDICATOR_CLASSES = {
 @click.option('--end-date', default=None, help="End date (YYYY-MM-DD)")
 @click.option("--interval", default=None, help="""Interval in which data is downloaded. 
 Valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo Intraday data cannot extend last 60 days.""")
-@click.option('--indicators', default=None, help="Comma-separated list of indicators (e.g., RSI:14,EMA:50,SMA:100)")
+@click.option('--indicators', default=None, help="Comma-separated list of indicators (e.g., RSI:14,EMA:50,SMA:100,MACD:12-26-9)")
 @click.option('--data-source', default='yfinance', help="Data source to use (default: yfinance)")
 #@click.option('--save', )
 
