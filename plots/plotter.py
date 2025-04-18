@@ -10,8 +10,8 @@ class Plotter:
         if column not in data.columns:
             raise ValueError(f"DataFrame must contain a '{column}' column.")
 
-        has_macd = "MACD" in indicators
-        has_bbands = "BBANDS" in indicators
+        has_macd = any("MACD" in name for name in indicators)
+        has_bbands = any("BBANDS" in name for name in indicators)
 
         subplot_count = 1 + has_macd + has_bbands
         fig, axes = plt.subplots(subplot_count, 1, figsize=(12, 6 + 2 * subplot_count), gridspec_kw={'height_ratios': [3] + [1] * (subplot_count - 1)})
@@ -27,16 +27,18 @@ class Plotter:
 
         ax_price.plot(data.index, data[column], label=column, color='blue', linewidth=1.5)
         for name, (series, params) in indicators.items():
-            if name not in {"MACD", "BBANDS"}:
-                series = series.dropna()
-                param_str = ",".join(map(str, params))
-                ax_price.plot(series.index, series, label=f"{name} ({param_str})", linewidth=1.2)
+            if "MACD" in name or "BBANDS" in name:
+                continue
+            series = series.dropna()
+            param_str = ",".join(map(str, params))
+            ax_price.plot(series.index, series, label=f"{name} ({param_str})", linewidth=1)
         ax_price.set_label("Price")
         ax_price.legend()
         ax_price.grid()
 
         if has_macd:
-            macd_data, params = indicators["MACD"]
+            macd_key = next(name for name in indicators if "MACD" in name)
+            macd_data, params = indicators[macd_key]
             macd_line = macd_data["MACD"]
             signal_line = macd_data["Signal"]
             ax_macd.plot(macd_data.index, macd_line, label="MACD Line", color='orange', linewidth=1.2)
@@ -47,7 +49,8 @@ class Plotter:
             ax_macd.grid()
 
         if has_bbands:
-            bbands_data, params = indicators["BBANDS"]
+            bbands_key = next(name for name in indicators if "BBANDS" in name)
+            bbands_data, params = indicators[bbands_key]
             upper_band = bbands_data["upper_band"]
             lower_band = bbands_data["lower_band"]
             middle_band = bbands_data["middle_band"]

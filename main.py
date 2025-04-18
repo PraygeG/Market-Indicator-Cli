@@ -81,7 +81,8 @@ def main(tickers, indicators, start_date, end_date, interval, data_source):
 
             indicator = indicator_class(*params)
             calculated_series = indicator.calculate(data)
-            calculated_indicators[name] = (calculated_series, params)
+            #calculated_indicators[name] = (calculated_series, params)
+            calculated_indicators[f"{name}_{'_'.join(map(str, params))}"] = (calculated_series,params)
 
         try:
             plotter.plot(data, calculated_indicators, company_name=ticker)
