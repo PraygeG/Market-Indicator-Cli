@@ -11,20 +11,23 @@ class Plotter:
             raise ValueError(f"DataFrame must contain a '{column}' column.")
 
         has_macd = "MACD" in indicators
+        has_bbands = "BBANDS" in indicators
 
-        if has_macd:
-            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), gridspec_kw={'height_ratios':[3, 1]})
-            ax_price = ax1
-            ax_macd = ax2
-        else:
-            fig, ax_price = plt.subplots(figsize=(12, 6))
-            ax_macd = None
+        subplot_count = 1 + has_macd + has_bbands
+        fig, axes = plt.subplots(subplot_count, 1, figsize=(12, 6 + 2 * subplot_count), gridspec_kw={'height_ratios': [3] + [1] * (subplot_count - 1)})
+
+        if subplot_count == 1:
+            axes = [axes]
+            
+        ax_price = axes[0]
+        ax_macd = axes[1] if has_macd else None
+        ax_bbands = axes[2] if has_bbands else (axes[1] if has_bbands and not has_macd else None)
 
         fig.suptitle(f"{self.title} - {company_name}")
 
         ax_price.plot(data.index, data[column], label=column, color='blue', linewidth=1.5)
         for name, (series, params) in indicators.items():
-            if name != "MACD":
+            if name not in {"MACD", "BBANDS"}:
                 series = series.dropna()
                 param_str = ",".join(map(str, params))
                 ax_price.plot(series.index, series, label=f"{name} ({param_str})", linewidth=1.2)
@@ -42,6 +45,18 @@ class Plotter:
             ax_macd.set_ylabel("MACD")
             ax_macd.legend()
             ax_macd.grid()
+
+        if has_bbands:
+            bbands_data, params = indicators["BBANDS"]
+            upper_band = bbands_data["upper_band"]
+            lower_band = bbands_data["lower_band"]
+            ax_bbands.plot(data.index, data[column], label="Close price", color='blue', linewidth=1.2)
+            ax_bbands.plot(bbands_data.index, upper_band, label="Upper Band", color='red', linestyle='--', linewidth=1.2)
+            ax_bbands.plot(bbands_data.index, lower_band, label="Lower Band", color='green', linestyle='--', linewidth=1.2)
+            ax_bbands.fill_between(bbands_data.index, lower_band, upper_band, color='grey', alpha=0.3, label="BBANDS Range")
+            ax_bbands.set_ylabel("BBANDS")
+            ax_bbands.legend()
+            ax_bbands.grid()
 
         plt.tight_layout(rect=[0, 0, 1, 0.96])
         plt.show()
