@@ -75,10 +75,11 @@ def main(tickers, indicators, start_date, end_date, interval, data_source):
                 continue
 
             indicator = indicator_class(*params)
-            calculated_indicators[name]=indicator.calculate(data)
-
+            calculated_series = indicator.calculate(data)
+            calculated_indicators[name] = (calculated_series, params)
+            
         try:
-            plotter.plot(data, calculated_indicators)
+            plotter.plot(data, calculated_indicators, company_name=ticker)
         except Exception as e:
             print(f"Error while plotting data for {ticker}: {e}")
 
