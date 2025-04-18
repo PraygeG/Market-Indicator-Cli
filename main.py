@@ -63,6 +63,7 @@ def main(tickers, indicators, start_date, end_date, interval, data_source):
     for ticker in tickers:
         print(f"Fetching data for {ticker}...")
         data = data_source.fetch_data(ticker, start_date, end_date, interval)
+        time.sleep(1)
 
         if data.empty:
             print(f"No data found for {ticker}. Skipping...")
@@ -77,7 +78,7 @@ def main(tickers, indicators, start_date, end_date, interval, data_source):
             indicator = indicator_class(*params)
             calculated_series = indicator.calculate(data)
             calculated_indicators[name] = (calculated_series, params)
-            
+
         try:
             plotter.plot(data, calculated_indicators, company_name=ticker)
         except Exception as e:
