@@ -50,8 +50,13 @@ class Plotter:
             macd_data, params = indicators[macd_key]
             macd_line = macd_data["MACD"]
             signal_line = macd_data["Signal"]
+            histogram = macd_line - signal_line
             ax_macd.plot(macd_data.index, macd_line, label="MACD Line", color='orange', linewidth=1.2)
             ax_macd.plot(macd_data.index, signal_line, label="Signal Line", color='green', linewidth=1.2)
+            positive_color = 'green'
+            negative_color = 'red'
+            colors = [positive_color if value > 0 else negative_color for value in histogram]
+            ax_macd.bar(macd_data.index, histogram, label="Histogram", color=colors, alpha=0.7, width=1)
             ax_macd.axhline(0, color='gray', linestyle='--', linewidth=0.8)
             ax_macd.set_ylabel("MACD")
             ax_macd.legend()
