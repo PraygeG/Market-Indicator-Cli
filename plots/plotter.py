@@ -13,10 +13,11 @@ class Plotter:
         has_macd = any("MACD" in name for name in indicators)
         has_bbands = any("BBANDS" in name for name in indicators)
         has_rsi = any(name.startswith("RSI") for name in indicators)
-        subplot_count = 1 + has_macd + has_bbands + has_rsi
+        has_obv = any(name.startswith("OBV") for name in indicators)
+        subplot_count = 1 + has_macd + has_bbands + has_rsi + has_obv
         fig, axes = plt.subplots(subplot_count, 1, figsize=(12, 6 + 2 * subplot_count), gridspec_kw={'height_ratios': [3] + [1] * (subplot_count - 1)})
         
-        
+
         if subplot_count == 1:
             axes = [axes]
             
@@ -30,13 +31,15 @@ class Plotter:
         if has_bbands:
             current_index += 1
         ax_rsi = axes[current_index] if has_rsi else None
-
+        if has_rsi:
+            current_index += 1
+        ax_obv = axes[current_index] if has_obv else None
 
         fig.suptitle(f"{self.title} - {company_name}")
 
         ax_price.plot(data.index, data[column], label=column, color='blue', linewidth=1.5)
         for name, (series, params) in indicators.items():
-            if "MACD" in name or "BBANDS" in name or "RSI" in name:
+            if "MACD" in name or "BBANDS" in name or "RSI" in name or "OBV":
                 continue
             series = series.dropna()
             param_str = ",".join(map(str, params))
@@ -86,6 +89,13 @@ class Plotter:
             ax_rsi.legend()
             ax_rsi.grid()
 
+        if has_obv:
+            obv_key = next(name for name in indicators if name.startswith("OBV"))
+            obv_data, _ = indicators[obv_key]
+            ax_obv.plot(obv_data.index, obv_data, label="On balance volume", color='green' , linewidth=1)
+            ax_obv.set_ylabel("OBV")
+            ax_obv.legend()
+            ax_obv.grid()
 
         plt.tight_layout(rect=[0, 0, 1, 0.96])
         plt.show()

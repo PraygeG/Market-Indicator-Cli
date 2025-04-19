@@ -7,6 +7,7 @@ from indicators.SMA import SMA
 from indicators.RSI import RSI
 from indicators.BBANDS import BBANDS
 from indicators.MACD import MACD
+from indicators.OBV import OBV
 from plots.plotter import Plotter
 from validators.input_validators import validate_date, get_valid_interval, get_valid_indicators, get_valid_tickers
 
@@ -15,7 +16,8 @@ INDICATOR_CLASSES = {
     "SMA": SMA,
     "RSI": RSI,
     "MACD": MACD,
-    "BBANDS": BBANDS
+    "BBANDS": BBANDS,
+    "OBV": OBV
 }
 
 @click.command()
@@ -79,8 +81,12 @@ def main(tickers, indicators, start_date, end_date, interval, data_source, colum
             if not indicator_class:
                 print(f"Indicator {name} is not supported. Skipping...")
                 continue
-
-            indicator = indicator_class(*params, column=column)
+            if name == 'OBV':
+                indicator = indicator_class()
+                calculated_series = indicator.calculate(data)
+                calculated_indicators[name] = (calculated_series, params)
+            else:
+                indicator = indicator_class(*params, column=column)
             calculated_series = indicator.calculate(data)
             #calculated_indicators[name] = (calculated_series, params)
             calculated_indicators[f"{name}_{'_'.join(map(str, params))}"] = (calculated_series,params)

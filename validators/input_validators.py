@@ -10,7 +10,8 @@ supported_indicators = {
     "SMA": (1, lambda p: p.isdigit() and int(p)>0),
     "RSI": (1, lambda p: p.isdigit() and int(p)>0),
     "MACD": (3, lambda p: p.isdigit() and int(p)>0),
-    "BBANDS": (2, lambda p: p.isdigit() and int(p)>0)
+    "BBANDS": (2, lambda p: p.isdigit() and int(p)>0),
+    "OBV": (0, None)
 }
 
 def get_valid_tickers(tickers_str: str | None)-> list[str]:
@@ -94,22 +95,34 @@ def validate_indicators(indicator_str: str)-> tuple[bool, str]:
     pairs = indicator_str.split(',')
     for pair in pairs:
         if ':' not in pair:
-            return False, f"Invalid format: '{pair}'. Use INDICATOR:PARAM syntax. For multiparameter INDICATOR:PARAM-PARAM-PARAM syntax."
-        
-        name, param = pair.split(':', 1)
-        name = name.strip().upper()
+            name = pair.strip().upper()
+            param = ""
+        else:    
+            name, param = pair.split(':', 1)
+            name = name.strip().upper()
 
         if name not in supported_indicators:
             return False, f"Unsupported indicator: '{name}'"
         
         required_count, validator_fn = supported_indicators[name]
 
-        if name == "MACD" and '-' in param:
-            param_list = param.split('-')
-        elif name == "BBANDS" and '-' in param:
+        if required_count == 0:
+            if param:
+                return False, f"'{name}' does not require any parameters, but got '{param}'."
+            continue
+
+        if name in {"MACD", "BBANDS"} and '-' in param:
             param_list = param.split('-')
         else:
             param_list = param.split(',')
+
+
+        #if name == "MACD" and '-' in param:
+        #    param_list = param.split('-')
+        #elif name == "BBANDS" and '-' in param:
+        #    param_list = param.split('-')
+        #else:
+        #    param_list = param.split(',')
 
         if len(param_list) != required_count:
             return False, f"'{name}' requires {required_count} parameter(s), got {len(param_list)}."
@@ -142,18 +155,24 @@ def get_valid_indicators(indicators: str)-> list[tuple[str, list[int]]]:
 
     for pair in indicator_pairs:
         if ':' not in pair:
-            continue
-        name, param_str = pair.split(':', 1)
-        name = name.strip().upper()
-
-
-
-        if name == "MACD" and '-' in param_str:
-            params = [int(p.strip()) for p in param_str.split('-')]
-        elif name == "BBANDS" and '-' in param_str:
-            params = [int(p.strip()) for p in param_str.split('-')]
+            name = pair.strip().upper()
+            params = []
         else:
-            params = [int(p.strip()) for p in param_str.split(',')]
+            name, param_str = pair.split(':', 1)
+            name = name.strip().upper()
+
+            if name in {"MACD", "BBANDS"} and '-' in param_str:
+                params = [int(p.strip()) for p in param_str.split('-')]
+            else:
+                params = [int(p.strip()) for p in param_str.split(',')]
         parsed_indicators.append((name, params))
+
+        #if name == "MACD" and '-' in param_str:
+        #    params = [int(p.strip()) for p in param_str.split('-')]
+        #elif name == "BBANDS" and '-' in param_str:
+        #    params = [int(p.strip()) for p in param_str.split('-')]
+        #else:
+        #    params = [int(p.strip()) for p in param_str.split(',')]
+        #parsed_indicators.append((name, params))
 
     return parsed_indicators
