@@ -12,22 +12,31 @@ class Plotter:
 
         has_macd = any("MACD" in name for name in indicators)
         has_bbands = any("BBANDS" in name for name in indicators)
-
-        subplot_count = 1 + has_macd + has_bbands
+        has_rsi = any(name.startswith("RSI") for name in indicators)
+        subplot_count = 1 + has_macd + has_bbands + has_rsi
         fig, axes = plt.subplots(subplot_count, 1, figsize=(12, 6 + 2 * subplot_count), gridspec_kw={'height_ratios': [3] + [1] * (subplot_count - 1)})
-
+        print(has_rsi)
+        print(indicators)
         if subplot_count == 1:
             axes = [axes]
             
+
         ax_price = axes[0]
-        ax_macd = axes[1] if has_macd else None
-        ax_bbands = axes[2] if has_bbands else (axes[1] if has_bbands and not has_macd else None)
+        current_index = 1
+        ax_macd = axes[current_index] if has_macd else None
+        if has_macd:
+            current_index += 1
+        ax_bbands = axes[current_index] if has_bbands else None
+        if has_bbands:
+            current_index += 1
+        ax_rsi = axes[current_index] if has_rsi else None
+
 
         fig.suptitle(f"{self.title} - {company_name}")
 
         ax_price.plot(data.index, data[column], label=column, color='blue', linewidth=1.5)
         for name, (series, params) in indicators.items():
-            if "MACD" in name or "BBANDS" in name:
+            if "MACD" in name or "BBANDS" in name or "RSI" in name:
                 continue
             series = series.dropna()
             param_str = ",".join(map(str, params))
@@ -61,6 +70,17 @@ class Plotter:
             ax_bbands.set_ylabel("BBANDS")
             ax_bbands.legend()
             ax_bbands.grid()
+
+        if has_rsi:
+            rsi_key = next(name for name in indicators if name.startswith("RSI"))
+            rsi_data, params = indicators[rsi_key]
+            ax_rsi.plot(rsi_data.index, rsi_data, label=f"RSI {params}", color='purple', linewidth=1.2)
+            ax_rsi.axhline(70, color='red', linestyle='--', linewidth=0.8, label="Overbought")
+            ax_rsi.axhline(30, color='green', linestyle='--', linewidth=0.8, label="Oversold")
+            ax_rsi.set_ylabel("RSI")
+            ax_rsi.legend()
+            ax_rsi.grid()
+
 
         plt.tight_layout(rect=[0, 0, 1, 0.96])
         plt.show()

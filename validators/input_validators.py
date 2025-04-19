@@ -146,6 +146,8 @@ def get_valid_indicators(indicators: str)-> list[tuple[str, list[int]]]:
         name, param_str = pair.split(':', 1)
         name = name.strip().upper()
 
+
+
         if name == "MACD" and '-' in param_str:
             params = [int(p.strip()) for p in param_str.split('-')]
         elif name == "BBANDS" and '-' in param_str:

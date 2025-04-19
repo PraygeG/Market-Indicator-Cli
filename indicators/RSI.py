@@ -16,7 +16,7 @@ class RSI(BaseIndicator):
         
         delta = data[self.column].diff()
         gain = (delta.where(delta > 0, 0)).rolling(window=self.window).mean()
-        loss = (delta.where(delta < 0, 0)).rolling(window=self.window).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=self.window).mean()
 
         rs = gain / loss
         rsi = 100 - (100 / (1 + rs))
