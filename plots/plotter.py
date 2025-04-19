@@ -15,8 +15,8 @@ class Plotter:
         has_rsi = any(name.startswith("RSI") for name in indicators)
         subplot_count = 1 + has_macd + has_bbands + has_rsi
         fig, axes = plt.subplots(subplot_count, 1, figsize=(12, 6 + 2 * subplot_count), gridspec_kw={'height_ratios': [3] + [1] * (subplot_count - 1)})
-        print(has_rsi)
-        print(indicators)
+        
+        
         if subplot_count == 1:
             axes = [axes]
             

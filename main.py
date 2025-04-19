@@ -26,9 +26,10 @@ INDICATOR_CLASSES = {
 Valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo Intraday data cannot extend last 60 days.""")
 @click.option('--indicators', default=None, help="Comma-separated list of indicators (e.g., RSI:14,EMA:50,SMA:100,MACD:12-26-9)")
 @click.option('--data-source', default='yfinance', help="Data source to use (default: yfinance)")
+@click.option('--column', default='Close', help="Column to use for calculations (e.g., Open, High, Low, Close, Volume)")
 #@click.option('--save', )
 
-def main(tickers, indicators, start_date, end_date, interval, data_source):
+def main(tickers, indicators, start_date, end_date, interval, data_source, column):
     if data_source == 'yfinance':
         data_source = YfinanceSource()
 
@@ -79,13 +80,13 @@ def main(tickers, indicators, start_date, end_date, interval, data_source):
                 print(f"Indicator {name} is not supported. Skipping...")
                 continue
 
-            indicator = indicator_class(*params)
+            indicator = indicator_class(*params, column=column)
             calculated_series = indicator.calculate(data)
             #calculated_indicators[name] = (calculated_series, params)
             calculated_indicators[f"{name}_{'_'.join(map(str, params))}"] = (calculated_series,params)
 
         try:
-            plotter.plot(data, calculated_indicators, company_name=ticker)
+            plotter.plot(data, calculated_indicators, column=column, company_name=ticker)
         except Exception as e:
             print(f"Error while plotting data for {ticker}: {e}")
 

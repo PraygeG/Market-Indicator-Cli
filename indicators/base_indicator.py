@@ -9,5 +9,5 @@ class BaseIndicator(ABC):
         self.column = column
         
     @abstractmethod
-    def calculate(self, data: pd.DataFrame, column: str)-> pd.Series:
+    def calculate(self, data: pd.DataFrame)-> pd.Series:
         pass
