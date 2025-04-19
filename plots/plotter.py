@@ -40,7 +40,7 @@ class Plotter:
                 continue
             series = series.dropna()
             param_str = ",".join(map(str, params))
-            ax_price.plot(series.index, series, label=f"{name} ({param_str})", linewidth=1)
+            ax_price.plot(series.index, series, label=f"{name}", linewidth=1)
         ax_price.set_label("Price")
         ax_price.legend()
         ax_price.grid()
