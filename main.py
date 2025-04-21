@@ -9,6 +9,7 @@ from indicators.BBANDS import BBANDS
 from indicators.MACD import MACD
 from indicators.OBV import OBV
 from plots.plotter import Plotter
+from plots.plotly import Plotterly
 from validators.input_validators import validate_date, get_valid_interval, get_valid_indicators, get_valid_tickers
 
 INDICATOR_CLASSES = {
@@ -66,7 +67,7 @@ def main(tickers, indicators, start_date, end_date, interval, data_source, colum
     
 
     plotter = Plotter()
-
+    plotly = Plotterly()
     for ticker in tickers:
         print(f"Fetching data for {ticker}...")
         data = data_source.fetch_data(ticker, start_date, end_date, interval)
@@ -89,7 +90,7 @@ def main(tickers, indicators, start_date, end_date, interval, data_source, colum
                 indicator = indicator_class(*params, column=column)
             calculated_series = indicator.calculate(data)
             #calculated_indicators[name] = (calculated_series, params)
-            calculated_indicators[f"{name}_{'_'.join(map(str, params))}"] = (calculated_series,params)
+            calculated_indicators[f"{name}_{'_'.join(map(str, params))}"] = (calculated_series, params)
 
         try:
             plotter.plot(data, calculated_indicators, column=column, company_name=ticker)

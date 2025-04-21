@@ -21,10 +21,6 @@ class MACD(BaseIndicator):
         macd_line = short_ema - long_ema
         signal_line = macd_line.ewm(span=self.signal_window, adjust=False).mean()
 
-        if hasattr(macd_line, 'values'):
-            macd_line = macd_line.values.flatten()
-        if hasattr(signal_line, 'values'):
-            signal_line = signal_line.values.flatten()
 
         result = pd.DataFrame(index=data.index)
         result['MACD'] = macd_line

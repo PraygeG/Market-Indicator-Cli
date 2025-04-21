@@ -39,11 +39,9 @@ class Plotter:
 
         ax_price.plot(data.index, data[column], label=column, color='blue', linewidth=1.5)
         for name, (series, params) in indicators.items():
-            if "MACD" in name or "BBANDS" in name or "RSI" in name or "OBV":
+            if name.startswith("MACD") or name.startswith("BBANDS") or name.startswith("RSI") or name.startswith("OBV"):
                 continue
-            series = series.dropna()
-            param_str = ",".join(map(str, params))
-            ax_price.plot(series.index, series, label=f"{name}", linewidth=1)
+            ax_price.plot(series.index, series, label=f"{name} ", linewidth=1)
         ax_price.set_label("Price")
         ax_price.legend()
         ax_price.grid()
