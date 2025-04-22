@@ -46,6 +46,8 @@ def prompt_until_valid(value, validator: callable, prompt_msg: str):
 
 
 def validate_tickers(tickers_str: str) -> list[str]:
+    if not tickers_str:
+        raise ValidationError("No tickers provided.")
     tickers = [t.strip().upper() for t in tickers_str.split(",") if t.strip()]
     if not tickers:
         raise ValidationError("No tickers provided.")
@@ -76,8 +78,10 @@ def get_valid_tickers(tickers_str: str | None) -> list[str]:
 
 
 def validate_date(date: str) -> str:
+    if not date:
+        raise ValidationError()
     try:
-        date_obj = datetime.strptime(date, "Y-%m-%d")
+        date_obj = datetime.strptime(date, "%Y-%m-%d")
         if date_obj.year > datetime.now().year:
             raise ValidationError("The year cannot be greater than the current year.")
         return date
@@ -129,7 +133,7 @@ def parse_indicators(indicator_str: str) -> list[tuple[str, list[int]]]:
             if name in {"MACD", "BBANDS"} and "-" in param:
                 params = [int(p.strip()) for p in param.split("-")]
             else:
-                params = [int(p.strip() for p in param.split(","))]
+                params = [int(p.strip()) for p in param.split(",")]
         result.append((name, params))
     return result
 
@@ -155,6 +159,8 @@ def validate_parsed_indicators(parsed_ind: list[tuple[str, list[int]]]):
 
 def get_valid_indicators(indicator_str: str | None) -> list[tuple[str, list[int]]]:
     def validator(s):
+        if not s:
+            raise ValidationError("No indicators provided.")
         parsed = parse_indicators(s)
         validate_parsed_indicators(parsed)
         return parsed
