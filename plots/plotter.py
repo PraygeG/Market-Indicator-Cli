@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
-
-class Plotter:
+from plots.base_plotter import BasePlotter
+class Plotter(BasePlotter):
 
     def __init__(self, title: str = "Stock Data with Indicators"):
         self.title = title
