@@ -10,7 +10,7 @@ def main():
     except Exception as e:
         print(f"Configuration error: {e}")
         return
-    
+
     fetcher = DataFetcher(config["data_source"])
     indicator_runner = IndicatorRunner()
     plot_service = PlotService()
@@ -25,6 +25,7 @@ def main():
             continue
         indicators = indicator_runner.run(data, config["indicators"], config["column"])
         plot_service.plot(data, indicators, config["column"], ticker)
+
 
 if __name__ == "__main__":
     main()

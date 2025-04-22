@@ -4,6 +4,7 @@ from services.data_fetcher import DataFetcher
 from services.indicator_runner import IndicatorRunner
 from services.plot_service import PlotService
 
+
 @click.command()
 @click.option(
     "--tickers", default=None, help="Comma-separated list of tickers (e.g., AAPL, MSFT)"
@@ -29,7 +30,41 @@ Valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo Intraday data can
     default="Close",
     help="Column to use for calculations (e.g., Open, High, Low, Close, Volume)",
 )
-def cli(tickers, start_date, end_date, interval, indicators, data_source, column):
+@click.option(
+    "--plot-style",
+    default="line",
+    type=click.Choice(["line", "candlestick"]),
+    help="Chart visualization style (default: line)",
+)
+@click.option(
+    "--color-scheme",
+    default="default",
+    type=click.Choice(["default", "monochrome", "tradingview", "dark"]),
+    help="Color scheme for the chart (default: default)",
+)
+@click.option(
+    "--up-color",
+    default=None,
+    help="Custom color for up candles/bars (overrides color scheme)",
+)
+@click.option(
+    "--down-color",
+    default=None,
+    help="Custom color for down candles/bars (overrides color scheme)",
+)
+def cli(
+    tickers,
+    start_date,
+    end_date,
+    interval,
+    indicators,
+    data_source,
+    column,
+    plot_style,
+    color_scheme,
+    up_color,
+    down_color,
+):
     try:
         config = CLIHanlder().get_config(
             tickers, start_date, end_date, interval, indicators, data_source, column
@@ -37,7 +72,7 @@ def cli(tickers, start_date, end_date, interval, indicators, data_source, column
     except Exception as e:
         print(f"Configuration error: {e}")
         return
-    
+
     fetcher = DataFetcher(config["data_source"])
     indicator_runner = IndicatorRunner()
     plot_service = PlotService()
@@ -52,6 +87,7 @@ def cli(tickers, start_date, end_date, interval, indicators, data_source, column
             continue
         indicators = indicator_runner.run(data, config["indicators"], config["column"])
         plot_service.plot(data, indicators, config["column"], ticker)
+
 
 if __name__ == "__main__":
     cli()
