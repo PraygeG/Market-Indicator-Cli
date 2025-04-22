@@ -89,6 +89,16 @@ def get_valid_date(date: str | None) -> str:
     return prompt_until_valid(date, validate_date, "Enter a valid date (YYYY-MM-DD):\n")
 
 
+def validate_date_range(start_date: str, end_date: str) -> None:
+    try:
+        start = datetime.strptime(start_date, "%Y-%m-%d")
+        end = datetime.strptime(end_date, "%Y-%m-%d")
+    except ValueError:
+        raise ValidationError("Invalid date format. Please use YYYY-MM-DD")
+    if start > end:
+        raise ValidationError("Start date cannot be after the end date.")
+
+
 def validate_interval(interval: str) -> str:
     if interval in valid_intervals:
         return interval
