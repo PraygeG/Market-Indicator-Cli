@@ -2,30 +2,47 @@ from datetime import datetime
 import yfinance as yf
 from requests.exceptions import HTTPError
 
-valid_intervals={"1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h", "1d", "5d", "1wk", "1mo", "3mo"}
-intraday_intervals={"1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h"}
+valid_intervals = {
+    "1m",
+    "2m",
+    "5m",
+    "15m",
+    "30m",
+    "60m",
+    "90m",
+    "1h",
+    "1d",
+    "5d",
+    "1wk",
+    "1mo",
+    "3mo",
+}
+intraday_intervals = {"1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h"}
 
 supported_indicators = {
-    "EMA": (1, lambda p: p.isdigit() and int(p)>0),
-    "SMA": (1, lambda p: p.isdigit() and int(p)>0),
-    "RSI": (1, lambda p: p.isdigit() and int(p)>0),
-    "MACD": (3, lambda p: p.isdigit() and int(p)>0),
-    "BBANDS": (2, lambda p: p.isdigit() and int(p)>0),
-    "OBV": (0, None)
+    "EMA": (1, lambda p: p.isdigit() and int(p) > 0),
+    "SMA": (1, lambda p: p.isdigit() and int(p) > 0),
+    "RSI": (1, lambda p: p.isdigit() and int(p) > 0),
+    "MACD": (3, lambda p: p.isdigit() and int(p) > 0),
+    "BBANDS": (2, lambda p: p.isdigit() and int(p) > 0),
+    "OBV": (0, None),
 }
 
-def get_valid_tickers(tickers_str: str | None)-> list[str]:
+
+def get_valid_tickers(tickers_str: str | None) -> list[str]:
     if tickers_str is None:
         prompt = True
     else:
-        tickers = [t.strip().upper() for t in tickers_str.split(',') if t.strip()]
+        tickers = [t.strip().upper() for t in tickers_str.split(",") if t.strip()]
         valid, message = validate_tickers(tickers)
         print(message)
         prompt = not valid
 
     while prompt:
-        tickers_str = input("Enter tickers (comma-separated, e.g., AAPL, MSFT, TSLA):\n")
-        tickers = [t.strip().upper() for t in tickers_str.split(',') if t.strip()]
+        tickers_str = input(
+            "Enter tickers (comma-separated, e.g., AAPL, MSFT, TSLA):\n"
+        )
+        tickers = [t.strip().upper() for t in tickers_str.split(",") if t.strip()]
         valid, message = validate_tickers(tickers)
         print(message)
         if valid:
@@ -33,17 +50,18 @@ def get_valid_tickers(tickers_str: str | None)-> list[str]:
 
     return tickers
 
-def validate_tickers(tickers: list[str])-> tuple[bool, str]:
+
+def validate_tickers(tickers: list[str]) -> tuple[bool, str]:
     if not tickers:
         return False, "No tickers provided."
-    
+
     invalid = []
     for ticker in tickers:
         try:
             info = yf.Ticker(ticker).info
-            if 'regularMarketPrice' not in info or info['regularMarketPrice'] is None:
+            if "regularMarketPrice" not in info or info["regularMarketPrice"] is None:
                 invalid.append(ticker)
-        
+
         except Exception as e:
             error_msg = str(e).lower()
             if "404" in error_msg or "not found" in error_msg:
@@ -56,23 +74,26 @@ def validate_tickers(tickers: list[str])-> tuple[bool, str]:
         return False, f"Invalid or inactive tickers: {', '.join(invalid)}"
     return True, "All tickers are valid."
 
+
 def validate_date(date: str):
     try:
         date_obj = datetime.strptime(date, "%Y-%m-%d")
-        
+
         if date_obj.year > datetime.now().year:
             return False, "The year cannot be greater than the current year."
         return True, "The date is valid"
     except ValueError:
         return False, "Invalid date format. Please use YYYY-MM-DD"
-    
+
+
 def validate_interval(interval: str):
     if interval in valid_intervals:
         return True, "Valid interval."
     else:
         return False, "Invalid interval. Try again."
-    
-def get_valid_interval(interval: str)-> str:
+
+
+def get_valid_interval(interval: str) -> str:
     if interval is None:
         prompt = True
     else:
@@ -88,51 +109,58 @@ def get_valid_interval(interval: str)-> str:
             break
     return interval
 
-def validate_indicators(indicator_str: str)-> tuple[bool, str]:
+
+def validate_indicators(indicator_str: str) -> tuple[bool, str]:
     if not indicator_str:
         return True, "No indicators provided. Skipping."
-    
-    pairs = indicator_str.split(',')
+
+    pairs = indicator_str.split(",")
     for pair in pairs:
-        if ':' not in pair:
+        if ":" not in pair:
             name = pair.strip().upper()
             param = ""
-        else:    
-            name, param = pair.split(':', 1)
+        else:
+            name, param = pair.split(":", 1)
             name = name.strip().upper()
 
         if name not in supported_indicators:
             return False, f"Unsupported indicator: '{name}'"
-        
+
         required_count, validator_fn = supported_indicators[name]
 
         if required_count == 0:
             if param:
-                return False, f"'{name}' does not require any parameters, but got '{param}'."
+                return (
+                    False,
+                    f"'{name}' does not require any parameters, but got '{param}'.",
+                )
             continue
 
-        if name in {"MACD", "BBANDS"} and '-' in param:
-            param_list = param.split('-')
+        if name in {"MACD", "BBANDS"} and "-" in param:
+            param_list = param.split("-")
         else:
-            param_list = param.split(',')
+            param_list = param.split(",")
 
-
-        #if name == "MACD" and '-' in param:
+        # if name == "MACD" and '-' in param:
         #    param_list = param.split('-')
-        #elif name == "BBANDS" and '-' in param:
+        # elif name == "BBANDS" and '-' in param:
         #    param_list = param.split('-')
-        #else:
+        # else:
         #    param_list = param.split(',')
 
         if len(param_list) != required_count:
-            return False, f"'{name}' requires {required_count} parameter(s), got {len(param_list)}."
-        
+            return (
+                False,
+                f"'{name}' requires {required_count} parameter(s), got {len(param_list)}.",
+            )
+
         if validator_fn and not all(validator_fn(p) for p in param_list):
             return False, f"Invalid parameters for '{name}': '{param}'"
-        
+
     return True, "All indicators are valid."
 
-def get_valid_indicators(indicators: str)-> list[tuple[str, list[int]]]:
+
+def get_valid_indicators(indicators: str) -> list[tuple[str, list[int]]]:
     if indicators is None:
         prompt = True
     else:
@@ -146,33 +174,33 @@ def get_valid_indicators(indicators: str)-> list[tuple[str, list[int]]]:
         print(message)
         if valid:
             break
-    
+
     parsed_indicators = []
     if not indicators:
         return parsed_indicators
-    
-    indicator_pairs = indicators.split(',')
+
+    indicator_pairs = indicators.split(",")
 
     for pair in indicator_pairs:
-        if ':' not in pair:
+        if ":" not in pair:
             name = pair.strip().upper()
             params = []
         else:
-            name, param_str = pair.split(':', 1)
+            name, param_str = pair.split(":", 1)
             name = name.strip().upper()
 
-            if name in {"MACD", "BBANDS"} and '-' in param_str:
-                params = [int(p.strip()) for p in param_str.split('-')]
+            if name in {"MACD", "BBANDS"} and "-" in param_str:
+                params = [int(p.strip()) for p in param_str.split("-")]
             else:
-                params = [int(p.strip()) for p in param_str.split(',')]
+                params = [int(p.strip()) for p in param_str.split(",")]
         parsed_indicators.append((name, params))
 
-        #if name == "MACD" and '-' in param_str:
+        # if name == "MACD" and '-' in param_str:
         #    params = [int(p.strip()) for p in param_str.split('-')]
-        #elif name == "BBANDS" and '-' in param_str:
+        # elif name == "BBANDS" and '-' in param_str:
         #    params = [int(p.strip()) for p in param_str.split('-')]
-        #else:
+        # else:
         #    params = [int(p.strip()) for p in param_str.split(',')]
-        #parsed_indicators.append((name, params))
+        # parsed_indicators.append((name, params))
 
     return parsed_indicators

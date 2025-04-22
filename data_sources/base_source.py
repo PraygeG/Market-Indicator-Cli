@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 class BaseSource(ABC):
     """
     Abstract base class for data sources.
