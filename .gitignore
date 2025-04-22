@@ -1,6 +1,6 @@
 __pycache__/
 plotly.py/
 .vscode/
-mainv2.py/
 input_validators.py/
 RunFromScript.py/
+main.py/
