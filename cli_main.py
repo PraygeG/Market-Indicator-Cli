@@ -25,6 +25,7 @@ Valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo Intraday data can
 @click.option(
     "--data-source", default="yfinance", help="Data source to use (default: yfinance)"
 )
+@click.option("--api-key", default=None, help="API key for AlphaVantage data source")
 @click.option(
     "--column",
     default="Close",
@@ -44,12 +45,23 @@ Valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo Intraday data can
 )
 @click.option(
     "--up-color",
+    default=None,
     help="Custom color for up candles/bars (overrides color scheme)",
 )
 @click.option(
     "--down-color",
+    default=None,
     help="Custom color for down candles/bars (overrides color scheme)",
 )
+@click.option("--save", is_flag=True, help="Save the plot(s) to file automatically. ")
+@click.option("--save-dir", default=None, help="Directory to save plots")
+@click.option(
+    "--save-format",
+    default="png",
+    type=click.Choice(["png", "pdf", "svg", "jpg"]),
+    help="Format to save (png, pdf, svg, jpg)",
+)
+@click.option("--save-dpi", default=None, type=int, help="DPI for raster formats")
 def cli(
     tickers,
     start_date,
@@ -57,11 +69,16 @@ def cli(
     interval,
     indicators,
     data_source,
+    api_key,
     column,
     plot_style,
     color_scheme,
     up_color,
     down_color,
+    save,
+    save_dir,
+    save_format,
+    save_dpi,
 ):
     try:
         config = CLIHanlder().get_config(
@@ -93,6 +110,13 @@ def cli(
             color_scheme=color_scheme,
             up_color=up_color,
             down_color=down_color,
+            save=save,
+            save_dir=save_dir,
+            save_format=save_format,
+            save_dpi=save_dpi,
+            interval=config["interval"],
+            start_date=config["start_date"],
+            end_date=config["end_date"],
         )
 
 

@@ -1,26 +1,21 @@
-market-tool/
-├── data_sources/
-│   ├── __init__.py          # Initialize the data_sources module
-│   ├── base_source.py       # Base class for data sources
-│   ├── yfinance_source.py   # YFinance data source implementation
-│   ├── custom_source.py     # Custom data source implementation
-│
-├── indicators/
-│   ├── __init__.py          # Initialize the indicators module
-│   ├── base_indicator.py    # Base class for indicators
-│   ├── ema.py               # EMA indicator implementation
-│   ├── sma.py               # SMA indicator implementation
-│   ├── rsi.py               # RSI indicator implementation
-│
-├── plots/
-│   ├── __init__.py          # Initialize the plots module
-│   ├── plotter.py           # Class for plotting indicators
-│
-├── utils/
-│   ├── __init__.py          # Initialize the utils module
-│   ├── config.py            # Configuration settings
-│   ├── data_utils.py        # Utility functions for data manipulation
-│
-├── main.py                  # Main entry point for the program
-├── requirements.txt         # Python dependencies
-├── README.md                # Project documentation
+data_sources/
+├── __init__.py
+├── alphavantage_source.py
+├── base_source.py
+└── yfinance_source.py
+indicators/
+plots/
+├── __init__.py
+├── base_plotter.py
+├── candlestick_plotter.py
+└── plotter.py
+services/
+├── __init__.py
+├── data_fetcher.py
+├── indicator_runner.py
+└── plot_service.py
+validators/
+├── __init__.py
+└── input_and_validation.py
+cli_main.py
+readme.md

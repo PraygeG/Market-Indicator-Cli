@@ -20,6 +20,13 @@ class Plotter(BasePlotter):
         indicators: dict,
         column: str = "Close",
         company_name: str = "Unknown",
+        save: bool = False,
+        save_dir: str = None,
+        save_format: str = "png",
+        save_dpi: int = 300,
+        interval: str = None,
+        start_date: str = None,
+        end_date: str = None,
     ):
         if column not in data.columns:
             raise ValueError(f"DataFrame must contain a '{column}' column.")
@@ -96,4 +103,18 @@ class Plotter(BasePlotter):
             self.plot_obv(ax_obv, obv_data)
 
         plt.tight_layout(rect=[0, 0, 1, 0.96])
+
+        # Save plots to file logic
+        if save:
+            self.save_plot(
+                fig,
+                save_dir=save_dir,
+                save_format=save_format,
+                save_dpi=save_dpi,
+                ticker=company_name,
+                interval=interval,
+                start_date=start_date,
+                end_date=end_date,
+            )
+
         plt.show()

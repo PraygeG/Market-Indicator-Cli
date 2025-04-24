@@ -73,7 +73,18 @@ class BasePlotter(ABC):
 
     @abstractmethod
     def plot(
-        self, data: pd.DataFrame, indicators: dict, column: str, company_name: str
+        self,
+        data: pd.DataFrame,
+        indicators: dict,
+        column: str,
+        company_name: str,
+        save: bool = False,
+        save_dir: str = None,
+        save_format: str = "png",
+        save_dpi: int = 300,
+        interval: str = None,
+        start_date: str = None,
+        end_date: str = None,
     ):
         pass
 
@@ -176,3 +187,57 @@ class BasePlotter(ABC):
         ax.set_ylabel("OBV")
         ax.legend()
         ax.grid(color=self.scheme.get("grid", None))
+
+    def save_plot(
+        self,
+        fig: Figure,
+        save_dir: str,
+        save_format: str = "png",
+        save_dpi: int = 300,
+        ticker: str = "",
+        interval: str = "",
+        start_date: str = "",
+        end_date: str = "",
+    ) -> str:
+        """
+        Save the plot to a file.
+        """
+        import os
+        from datetime import datetime
+
+        format = save_format.lower()
+        valid_formats = ["png", "pdf", "svg", "jpg", "jpeg"]
+        if format not in valid_formats:
+            raise ValueError(f"Format must be one of {valid_formats}")
+
+        if format == "jpg":
+            format = "jpeg"
+
+        # Generate filename
+        components = []
+        if ticker:
+            components.append(ticker)
+        if interval:
+            components.append(interval)
+        if start_date:
+            components.append(start_date.replace("-", ""))
+        if end_date:
+            components.append(end_date.replace("-", ""))
+
+        if not components:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            components.append(f"plot_{timestamp}")
+
+        filename = "_".join(components) + f".{format}"
+
+        if save_dir:
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir)
+            filepath = os.path.join(save_dir, filename)
+        else:
+            filepath = filename
+
+        fig.savefig(filepath, format=format, dpi=save_dpi, bbox_inches="tight")
+        print(f"Plot saved to: {os.path.abspath(filepath)}")
+
+        return filepath

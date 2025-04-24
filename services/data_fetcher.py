@@ -1,4 +1,5 @@
 from data_sources.yfinance_source import YfinanceSource
+from data_sources.alphavantage_source import AlphavantageSource
 import time
 
 
@@ -6,6 +7,8 @@ class DataFetcher:
     def __init__(self, source="yfinance"):
         if source == "yfinance":
             self.source = YfinanceSource()
+        elif source == "alphavantage":
+            self.source = AlphavantageSource()
         else:
             raise NotImplementedError("Only yfinance is supported for now.")
 

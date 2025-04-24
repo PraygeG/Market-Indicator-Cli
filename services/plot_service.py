@@ -16,6 +16,13 @@ class PlotService:
         color_scheme="default",
         up_color=None,
         down_color=None,
+        save=False,
+        save_dir=None,
+        save_format="png",
+        save_dpi=300,
+        interval=None,
+        start_date=None,
+        end_date=None,
     ):
         title = f"Stock analysis for {ticker}"
 
@@ -34,4 +41,16 @@ class PlotService:
                 down_color=down_color,
             )
 
-        plotter.plot(data, indicators, column, ticker)
+        plotter.plot(
+            data,
+            indicators,
+            column,
+            ticker,
+            save=save,
+            save_dir=save_dir,
+            save_format=save_format,
+            save_dpi=save_dpi,
+            interval=interval,
+            start_date=start_date,
+            end_date=end_date,
+        )

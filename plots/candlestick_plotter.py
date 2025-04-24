@@ -25,6 +25,13 @@ class CandlestickPlotter(BasePlotter):
         indicators: dict,
         column: str = "Close",
         company_name: str = "Unknown",
+        save: bool = False,
+        save_dir: str = None,
+        save_format: str = "png",
+        save_dpi: int = 300,
+        interval: str = None,
+        start_date: str = None,
+        end_date: str = None,
     ):
         required_columns = ["Open", "High", "Low", "Close"]
         if not all(col in data.columns for col in required_columns):
@@ -121,6 +128,20 @@ class CandlestickPlotter(BasePlotter):
             self.plot_obv(ax_obv, obv_data)
 
         plt.tight_layout(rect=[0, 0, 1, 0.96])
+
+        # Save to file logic
+        if save:
+            self.save_plot(
+                fig,
+                save_dir=save_dir,
+                save_format=save_format,
+                save_dpi=save_dpi,
+                ticker=company_name,
+                interval=interval,
+                start_date=start_date,
+                end_date=end_date,
+            )
+
         plt.show()
 
     def _plot_candlesticks(self, ax: Axes, data: pd.DataFrame):
