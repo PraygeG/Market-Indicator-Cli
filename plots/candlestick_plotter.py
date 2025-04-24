@@ -5,16 +5,27 @@ from matplotlib.patches import Rectangle
 from plots.base_plotter import BasePlotter
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
-from datetime import datetime
 
 
 class CandlestickPlotter(BasePlotter):
     """Plotter for candlestick charts with customizable color schemes"""
 
     COLOR_SCHEMES = {
-        "default": {"up": "green", "down": "red"},
-        "monochrome": {"up": "black", "down": "gray"},
-        "tradingview": {"up": "#26a69a", "down": "#ef5350"},
+        "default": {
+            "up": "green",
+            "down": "red",
+            "bg": "white",
+            "text": "black",
+            "grid": "#cccccc",
+        },
+        "monochrome": {"up": "black", "down": "gray", "bg": "white", "grid": "#cccccc"},
+        "tradingview": {
+            "up": "#26a69a",
+            "down": "#ef5350",
+            "bg": "white",
+            "text": "black",
+            "grid": "#e0e3eb",
+        },
         "dark": {
             "up": "#CAF50",
             "down": "#FF5252",
@@ -66,7 +77,7 @@ class CandlestickPlotter(BasePlotter):
         fig: Figure
         axes: Axes | list[Axes]
 
-        fig, axes = plt.subplot(
+        fig, axes = plt.subplots(
             subplot_count,
             1,
             figsize=(12, 6 + 2 * subplot_count),
@@ -120,7 +131,11 @@ class CandlestickPlotter(BasePlotter):
 
         ax_price.set_ylabel("Price")
         ax_price.legend()
-        ax_price.grid(color=self.scheme.get("grid", None))
+        grid_color = self.scheme.get("grid", None)
+        if grid_color is not None:
+            ax_price.grid(color=grid_color)
+        else:
+            ax_price.grid()
         if len(data) > 50:
             ax_price.xaxis.set_major_locator(mdates.AutoDateLocator())
 
@@ -213,7 +228,7 @@ class CandlestickPlotter(BasePlotter):
             )
             ax_rsi.set_ylabel("RSI")
             ax_rsi.legend()
-            ax_rsi.grid("grid", None)
+            ax_rsi.grid(color=self.scheme.get("grid", None))
         if has_obv:
             obv_key = next(name for name in indicators if name.startswith("OBV"))
             obv_data, _ = indicators[obv_key]
@@ -233,20 +248,38 @@ class CandlestickPlotter(BasePlotter):
 
     def _plot_candlesticks(self, ax: Axes, data: pd.DataFrame):
         """Draw candlesticks on the given axis"""
-        width = 0.6
+        data = data.sort_index()
+        if len(data) > 1:
+            date_nums = [mdates.date2num(d) for d in data.index]
+            min_diff = min([b - a for a,b in zip(date_nums[:-1], date_nums[1:])])
+            width = min_diff * 0.7
+        else:
+            width = 0.6
 
-        for i, (date, row) in enumerate(data.iterrows()):
-            if row["Close"] >= row["Open"]:
+        for date, row in data.iterrows():
+            x = mdates.date2num(date)
+            close_value = (
+                row["Close"].item() if hasattr(row["Close"], "item") else row["Close"]
+            )
+            open_value = (
+                row["Open"].item() if hasattr(row["Open"], "item") else row["Open"]
+            )
+            high_value = (
+                row["High"].item() if hasattr(row["High"], "item") else row["High"]
+            )
+            low_value = row["Low"].item() if hasattr(row["Low"], "item") else row["Low"]
+
+            if close_value >= open_value:
                 color = self.scheme["up"]
-                body_bottom = row["Open"]
-                body_height = row["Close"] - row["Open"]
+                body_bottom = open_value
+                body_height = close_value - open_value
             else:
                 color = self.scheme["down"]
-                body_bottom = row["Close"]
-                body_height = row["Open"] - row["Close"]
+                body_bottom = close_value
+                body_height = open_value - close_value
 
             rect = Rectangle(
-                xy=(i - width / 2, body_bottom),
+                xy=(x - width / 2, body_bottom),
                 width=width,
                 height=body_height,
                 facecolor=color,
@@ -258,30 +291,30 @@ class CandlestickPlotter(BasePlotter):
 
             # Plot the upper wick
             ax.plot(
-                [i, i],
-                [max(row["Open"], row["Close"]), row["High"]],
+                [x, x],
+                [max(open_value, close_value), high_value],
                 color="black",
                 linewidth=0.8,
             )
 
             # Plot the lower wick
             ax.plot(
-                [i, i],
-                [max(row["Open"], row["Close"]), row["Low"]],
+                [x, x],
+                [min(open_value, close_value), low_value],
                 color="black",
                 linewidth=0.8,
             )
 
-        if len(data) <= 50:
-            ax.set_xticks(range(len(data)))
-            ax.set_xticklabels(
-                [date.date() for date in data.index], rotation=45, ha="right"
-            )
-        else:
-            ax.xaxis.set_major_locator(mdates.AutoDateLocator())
-            ax.xaxis.set_major_locator(mdates.DateFormatter("%Y-%m-%d"))
-            plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha="right")
+        ax.set_xlim(
+            mdates.date2num(data.index.min()) - 1, mdates.date2num(data.index.max()) + 1
+        )
+        ax.xaxis_date()
+        ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+        ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
+        plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha="right")
 
-        price_range = data["High"].max() - data["Low"].min()
+        price_range = data["High"].max().item() - data["Low"].min().item()
         margin = price_range * 0.05
-        ax.set_ylim(data["Low"].min() - margin, data["High"].max() + margin)
+        ax.set_ylim(
+            data["Low"].min().item() - margin, data["High"].max().item() + margin
+        )

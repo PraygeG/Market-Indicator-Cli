@@ -86,7 +86,16 @@ def cli(
             print(f"No data found for {ticker}. Skipping...")
             continue
         indicators = indicator_runner.run(data, config["indicators"], config["column"])
-        plot_service.plot(data, indicators, config["column"], ticker)
+        plot_service.plot(
+            data,
+            indicators,
+            config["column"],
+            ticker,
+            plot_style=plot_style,
+            color_scheme=color_scheme,
+            up_color=up_color,
+            down_color=down_color,
+        )
 
 
 if __name__ == "__main__":
