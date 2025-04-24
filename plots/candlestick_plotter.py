@@ -10,50 +10,14 @@ from matplotlib.axes import Axes
 class CandlestickPlotter(BasePlotter):
     """Plotter for candlestick charts with customizable color schemes"""
 
-    COLOR_SCHEMES = {
-        "default": {
-            "up": "green",
-            "down": "red",
-            "bg": "white",
-            "text": "black",
-            "grid": "#cccccc",
-        },
-        "monochrome": {"up": "black", "down": "gray", "bg": "white", "grid": "#cccccc"},
-        "tradingview": {
-            "up": "#26a69a",
-            "down": "#ef5350",
-            "bg": "white",
-            "text": "black",
-            "grid": "#e0e3eb",
-        },
-        "dark": {
-            "up": "#CAF50",
-            "down": "#FF5252",
-            "bg": "#121212",
-            "text": "white",
-            "grid": "#333333",
-        },
-    }
-
     def __init__(
         self,
-        title: str = "Stock Dat with Indicators",
+        title: str = "Stock Data with Indicators",
         color_scheme: str = "default",
         up_color: str = None,
         down_color: str = None,
     ):
-        super().__init__(title)
-        self.color_scheme = color_scheme
-
-        if color_scheme in self.COLOR_SCHEMES:
-            self.scheme = self.COLOR_SCHEMES[color_scheme].copy()
-        else:
-            self.scheme = self.COLOR_SCHEMES["default"].copy()
-
-        if up_color:
-            self.scheme["up"] = up_color
-        if down_color:
-            self.scheme["down"] = down_color
+        super().__init__(title, color_scheme, up_color, down_color)
 
     def plot(
         self,
@@ -142,106 +106,19 @@ class CandlestickPlotter(BasePlotter):
         if has_macd:
             macd_key = next(name for name in indicators if "MACD" in name)
             macd_data, params = indicators[macd_key]
-            macd_line = macd_data["MACD"]
-            signal_line = macd_data["Signal"]
-            histogram = macd_line - signal_line
-            ax_macd.plot(
-                macd_data.index,
-                macd_line,
-                label="MACD Line",
-                color="orange",
-                linewidth=1.2,
-            )
-            ax_macd.plot(
-                macd_data.index,
-                signal_line,
-                label="Signal Line",
-                color="green",
-                linewidth=1.2,
-            )
-            colors = [
-                self.scheme["up"] if value > 0 else self.scheme["down"]
-                for value in histogram
-            ]
-            ax_macd.bar(
-                macd_data.index,
-                histogram,
-                label="Histogram",
-                color=colors,
-                alpha=0.7,
-                width=1,
-            )
-            ax_macd.axhline(0, color="gray", linestyle="--", linewidth=0.8)
-            ax_macd.set_ylabel("MACD")
-            ax_macd.legend()
-            ax_macd.grid(color=self.scheme.get("grid", None))
+            self.plot_macd(ax_macd, macd_data, params)
         if has_bbands:
             bbands_key = next(name for name in indicators if "BBANDS" in name)
             bbands_data, params = indicators[bbands_key]
-            upper_band = bbands_data["upper_band"]
-            lower_band = bbands_data["lower_band"]
-            middle_band = bbands_data["middle_band"]
-            ax_bbands.plot(
-                bbands_data.index,
-                middle_band,
-                label="Middle Band",
-                color="blue",
-                linewidth=1.2,
-            )
-            ax_bbands.plot(
-                bbands_data.index,
-                upper_band,
-                label="Upper Band",
-                color="red",
-                linestyle="--",
-                linewidth=1.2,
-            )
-            ax_bbands.plot(
-                bbands_data.index,
-                lower_band,
-                label="Lower Band",
-                color="green",
-                linestyle="--",
-                linewidth=1.2,
-            )
-            ax_bbands.fill_between(
-                bbands_data.index, lower_band, upper_band, color="grey", alpha=0.3
-            )
-            ax_bbands.set_ylabel("BBANDS")
-            ax_bbands.legend()
-            ax_bbands.grid(color=self.scheme.get("grid", None))
+            self.plot_bbands(ax_bbands, bbands_data, params)
         if has_rsi:
             rsi_key = next(name for name in indicators if name.startswith("RSI"))
             rsi_data, params = indicators[rsi_key]
-            ax_rsi.plot(
-                rsi_data.index,
-                rsi_data,
-                label=f"RSI {params}",
-                color="purple",
-                linewidth=1.2,
-            )
-            ax_rsi.axhline(
-                70, color="red", linestyle="--", linewidth=0.8, label="Overbought"
-            )
-            ax_rsi.axhline(
-                30, color="green", linestyle="--", linewidth=0.8, label="Oversold"
-            )
-            ax_rsi.set_ylabel("RSI")
-            ax_rsi.legend()
-            ax_rsi.grid(color=self.scheme.get("grid", None))
+            self.plot_rsi(ax_rsi, rsi_data, params)
         if has_obv:
             obv_key = next(name for name in indicators if name.startswith("OBV"))
             obv_data, _ = indicators[obv_key]
-            ax_obv.plot(
-                obv_data.index,
-                obv_data,
-                label="On balance volume",
-                color="green",
-                linewidth=1,
-            )
-            ax_obv.set_ylabel("OBV")
-            ax_obv.legend()
-            ax_obv.grid(color=self.scheme.get("grid", None))
+            self.plot_obv(ax_obv, obv_data)
 
         plt.tight_layout(rect=[0, 0, 1, 0.96])
         plt.show()
@@ -249,10 +126,13 @@ class CandlestickPlotter(BasePlotter):
     def _plot_candlesticks(self, ax: Axes, data: pd.DataFrame):
         """Draw candlesticks on the given axis"""
         data = data.sort_index()
+        date_nums = [mdates.date2num(d) for d in data.index]
         if len(data) > 1:
-            date_nums = [mdates.date2num(d) for d in data.index]
-            min_diff = min([b - a for a,b in zip(date_nums[:-1], date_nums[1:])])
-            width = min_diff * 0.7
+            diffs = [b - a for a, b in zip(date_nums[:-1], date_nums[1:])]
+            import numpy as np
+
+            median_diff = np.median(diffs)
+            width = median_diff * 0.7
         else:
             width = 0.6
 

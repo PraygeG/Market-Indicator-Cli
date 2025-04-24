@@ -27,6 +27,11 @@ class PlotService:
                 down_color=down_color,
             )
         else:
-            plotter = Plotter(title=title)
+            plotter = Plotter(
+                title="Stock Data with indicators",
+                color_scheme=color_scheme,
+                up_color=up_color,
+                down_color=down_color,
+            )
 
         plotter.plot(data, indicators, column, ticker)
