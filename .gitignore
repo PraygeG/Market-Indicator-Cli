@@ -8,3 +8,4 @@ cli_main.py/
 Pipfile/
 Pipfile.lock/
 requirements.txt/
+tests/
