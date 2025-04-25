@@ -35,6 +35,7 @@ class Plotter(BasePlotter):
         has_bbands = any("BBANDS" in name for name in indicators)
         has_rsi = any(name.startswith("RSI") for name in indicators)
         has_obv = any(name.startswith("OBV") for name in indicators)
+        has_adx = any(name.startswith("ADX") for name in indicators)
         subplot_count = 1 + has_macd + has_bbands + has_rsi + has_obv
         fig, axes = plt.subplots(
             subplot_count,
@@ -61,6 +62,9 @@ class Plotter(BasePlotter):
         if has_rsi:
             current_index += 1
         ax_obv = axes[current_index] if has_obv else None
+        if has_obv:
+            current_index += 1
+        ax_adx = axes[current_index] if has_adx else None
 
         ax_price.plot(
             data.index,
@@ -101,6 +105,11 @@ class Plotter(BasePlotter):
             obv_key = next(name for name in indicators if name.startswith("OBV"))
             obv_data, _ = indicators[obv_key]
             self.plot_obv(ax_obv, obv_data)
+
+        if has_adx:
+            adx_key = next(name for name in indicators if name.startswith("ADX"))
+            adx_data, params = indicators[adx_key]
+            self.plot_adx(ax_adx, adx_data, params)
 
         plt.tight_layout(rect=[0, 0, 1, 0.96])
 

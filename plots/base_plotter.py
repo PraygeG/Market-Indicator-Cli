@@ -176,7 +176,6 @@ class BasePlotter(ABC):
         ax.grid(color=self.scheme.get("grid", None))
 
     def plot_obv(self, ax: Axes, obv_data: pd.Series) -> None:
-        print("OBV color:", self.scheme["up"])
         ax.plot(
             obv_data.index,
             obv_data,
@@ -185,6 +184,35 @@ class BasePlotter(ABC):
             linewidth=1,
         )
         ax.set_ylabel("OBV")
+        ax.legend()
+        ax.grid(color=self.scheme.get("grid", None))
+
+    def plot_adx(self, ax: Axes, adx_data: pd.DataFrame) -> None:
+        adx_line = adx_data["ADX"]
+        positive_di_line = adx_data["plus_DI"]
+        negative_di_line = adx_data["minus_DI"]
+        ax.plot(
+            adx_data.index,
+            adx_line,
+            label="ADX Line",
+            color="blue",
+            linewidth=1.2,
+        )
+        ax.plot(
+            adx_data.index,
+            positive_di_line,
+            label="+DI Line",
+            color=self.scheme["up"],
+            linewidth=1,
+        )
+        ax.plot(
+            adx_data.index,
+            negative_di_line,
+            label="-DI Line",
+            color=self.scheme["down"],
+            linewidth=1,
+        )
+        ax.set_ylabel("ADX")
         ax.legend()
         ax.grid(color=self.scheme.get("grid", None))
 

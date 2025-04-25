@@ -31,6 +31,7 @@ supported_indicators = {
     "RSI": (1, lambda p: p.isdigit() and int(p) > 0),
     "MACD": (3, lambda p: p.isdigit() and int(p) > 0),
     "BBANDS": (2, lambda p: p.isdigit() and int(p) > 0),
+    "ADX": (1, lambda p: p.isdigit() and int(p) > 0),
     "OBV": (0, None),
 }
 

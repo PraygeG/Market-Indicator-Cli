@@ -4,14 +4,19 @@ import click
 def tickers_option(f):
     return click.option(
         "--tickers",
+        "--t",
         default=None,
         help="Comma-separated list of tickers (e.g., AAPL, MSFT)",
     )(f)
 
 
 def date_range_options(f):
-    f = click.option("--start-date", default=None, help="Start date (YYYY-MM-DD)")(f)
-    f = click.option("--end-date", default=None, help="End date (YYYY-MM-DD)")(f)
+    f = click.option(
+        "--start-date", "--start", default=None, help="Start date (YYYY-MM-DD)"
+    )(f)
+    f = click.option("--end-date", "--end", default=None, help="End date (YYYY-MM-DD)")(
+        f
+    )
     return f
 
 
@@ -85,12 +90,13 @@ def save_options(f):
     f = click.option("--save-dir", default=None, help="Directory to save plots")(f)
     f = click.option(
         "--save-format",
+        "--format",
         default="png",
         type=click.Choice(["png", "pdf", "svg", "jpg"]),
         help="Format to save (png, pdf, svg, jpg)",
     )(f)
     f = click.option(
-        "--save-dpi", default=None, type=int, help="DPI for raster formats"
+        "--save-dpi", "--dpi", default=None, type=int, help="DPI for raster formats"
     )(f)
     return f
 
