@@ -5,3 +5,5 @@ input_validators.py/
 RunFromScript.py/
 main.py/
 cli_main.py/
+Pipfile/
+Pipfile.lock/
