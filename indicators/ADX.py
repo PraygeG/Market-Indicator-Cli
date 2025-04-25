@@ -104,11 +104,7 @@ class ADX(BaseIndicator):
         di_diff = abs(df["plus_DI"] - df["minus_DI"])
         di_sum = df["plus_DI"] + df["minus_DI"]
         # Use np.where for save division
-        df["DX"] = np.where(
-            di_sum != 0,
-            (di_diff / di_sum) * 100,
-            0
-        )
+        df["DX"] = np.where(di_sum != 0, (di_diff / di_sum) * 100, 0)
 
         # Average Directional Index
         df["ADX"] = wilders_smoothing_series(df["DX"])
