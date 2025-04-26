@@ -90,8 +90,8 @@ def validate_date(date: str) -> str:
         raise ValidationError(f"Invalid date format. Please use YYYY-MM-DD")
 
 
-def get_valid_date(date: str | None) -> str:
-    return prompt_until_valid(date, validate_date, "Enter a valid date (YYYY-MM-DD):\n")
+def get_valid_date(date: str | None, message: str) -> str:
+    return prompt_until_valid(date, validate_date, message)
 
 
 def validate_date_range(start_date: str, end_date: str) -> None:

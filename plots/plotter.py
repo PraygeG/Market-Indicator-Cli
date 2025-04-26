@@ -98,7 +98,7 @@ class Plotter:
             obv_key = next(name for name in indicators if name.startswith("OBV"))
             obv_data, _ = indicators[obv_key]
             plot_obv(ax_obv, obv_data, self.scheme)
-        
+
         if indicators_info["has_macd"]:
             macd_key = next(name for name in indicators if "MACD" in name)
             macd_data, params = indicators[macd_key]
@@ -108,12 +108,12 @@ class Plotter:
             rsi_key = next(name for name in indicators if name.startswith("RSI"))
             rsi_data, params = indicators[rsi_key]
             plot_rsi(ax_rsi, rsi_data, params, self.scheme)
-        
+
         if indicators_info["has_adx"]:
             adx_key = next(name for name in indicators if name.startswith("ADX"))
             adx_data, params = indicators[adx_key]
             plot_adx(ax_adx, adx_data, self.scheme)
-        
+
         plt.tight_layout(rect=[0, 0, 1, 0.96])
 
         # Save plots to file
@@ -126,8 +126,7 @@ class Plotter:
                 ticker,
                 interval,
                 start_date,
-                end_date
+                end_date,
             )
 
         plt.show()
-        

@@ -50,9 +50,7 @@ def apply_color_scheme(
     fig.suptitle(title, color=scheme["text"])
 
 
-def plot_macd(
-    ax: Axes, macd_data: pd.DataFrame, params: Any, scheme: dict
-) -> None:
+def plot_macd(ax: Axes, macd_data: pd.DataFrame, params: Any, scheme: dict) -> None:
     macd_line = macd_data["MACD"]
     signal_line = macd_data["Signal"]
     histogram = macd_line - signal_line
@@ -81,9 +79,7 @@ def plot_macd(
     ax.grid(color=scheme.get("grid", None))
 
 
-def plot_bbands(
-    ax: Axes, bbands_data: pd.DataFrame, params: Any, scheme: dict
-) -> None:
+def plot_bbands(ax: Axes, bbands_data: pd.DataFrame, params: Any, scheme: dict) -> None:
     upper_band = bbands_data["upper_band"]
     lower_band = bbands_data["lower_band"]
     middle_band = bbands_data["middle_band"]

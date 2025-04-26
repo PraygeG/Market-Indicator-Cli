@@ -48,7 +48,7 @@ def fetch_all_data(
 
 def run_indicators(
     data: dict[str, pd.DataFrame], indicators: list[tuple[str, list[int]]], column: str
-) -> dict[str, pd.DataFrame | pd.Series]:
+) -> dict[str, tuple[pd.DataFrame | pd.Series, list[int]]]:
     calculated = {}
     for name, params in indicators:
         indicator_class = INDICATOR_CLASSES.get(name)

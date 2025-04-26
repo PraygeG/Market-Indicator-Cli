@@ -21,8 +21,8 @@ def _build_config(
     **kwargs,
 ):
     tickers = get_valid_tickers(tickers)
-    start_date = get_valid_date(start_date)
-    end_date = get_valid_date(end_date)
+    start_date = get_valid_date(start_date, "Enter a valid start date (YYYY-MM-DD):\n")
+    end_date = get_valid_date(end_date, "Enter a valid end date (YYYY-MM-DD):\n")
     validate_date_range(start_date, end_date)
     interval = get_valid_interval(interval)
     indicators = get_valid_indicators(indicators)
@@ -39,7 +39,7 @@ def _build_config(
     return config
 
 
-def _run_pipeline(config: dict[any, any]):
+def _run_pipeline(config: dict[str, any]):
     all_data = fetch_all_data(
         config["tickers"],
         config["start_date"],

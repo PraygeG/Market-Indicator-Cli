@@ -2,14 +2,23 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import matplotlib.dates as mdates
 from matplotlib.patches import Rectangle
-from plots.base_plotter import BasePlotter
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
+from plots.plot_methods import (
+    COLOR_SCHEMES,
+    apply_color_scheme,
+    plot_macd,
+    plot_bbands,
+    plot_rsi,
+    plot_obv,
+    plot_adx,
+    analyze_indicators,
+    assign_axes,
+    save_plot,
+)
 
 
-class CandlestickPlotter(BasePlotter):
-    """Plotter for candlestick charts with customizable color schemes"""
-
+class CandlestickPlotter:
     def __init__(
         self,
         title: str = "Stock Data with Indicators",
@@ -17,132 +26,12 @@ class CandlestickPlotter(BasePlotter):
         up_color: str = None,
         down_color: str = None,
     ):
-        super().__init__(title, color_scheme, up_color, down_color)
-
-    def plot(
-        self,
-        data: pd.DataFrame,
-        indicators: dict,
-        column: str = "Close",
-        company_name: str = "Unknown",
-        save: bool = False,
-        save_dir: str = None,
-        save_format: str = "png",
-        save_dpi: int = 300,
-        interval: str = None,
-        start_date: str = None,
-        end_date: str = None,
-    ):
-        required_columns = ["Open", "High", "Low", "Close"]
-        if not all(col in data.columns for col in required_columns):
-            raise ValueError(
-                f"DataFrame must contain OHLC columns for candlestick chart."
-            )
-
-        has_macd = any("MACD" in name for name in indicators)
-        has_bbands = any("BBANDS" in name for name in indicators)
-        has_rsi = any(name.startswith("RSI") for name in indicators)
-        has_obv = any(name.startswith("OBV") for name in indicators)
-        subplot_count = 1 + has_macd + has_bbands + has_rsi + has_obv
-
-        fig: Figure
-        axes: Axes | list[Axes]
-
-        fig, axes = plt.subplots(
-            subplot_count,
-            1,
-            figsize=(12, 6 + 2 * subplot_count),
-            gridspec_kw={"height_ratios": [3] + [1] * (subplot_count - 1)},
-        )
-        if subplot_count == 1:
-            axes = [axes]
-
-        # Apply dark theme if selected
-        if "bg" in self.scheme:
-            fig.patch.set_facecolor(self.scheme["bg"])
-            for ax in axes:
-                ax: Axes
-                ax.set_facecolor(self.scheme["bg"])
-                ax.spines["bottom"].set_color(self.scheme["text"])
-                ax.spines["top"].set_color(self.scheme["text"])
-                ax.spines["right"].set_color(self.scheme["text"])
-                ax.spines["left"].set_color(self.scheme["text"])
-                ax.tick_params(colors=self.scheme["text"])
-                ax.xaxis.label.set_color(self.scheme["text"])
-                ax.yaxis.label.set_color(self.scheme["text"])
-                ax.title.set_color(self.scheme["text"])
-            fig.suptitle(f"{self.title} - {company_name}", color=self.scheme["text"])
-        else:
-            fig.suptitle(f"{self.title} - {company_name}")
-
-        ax_price = axes[0]
-        current_index = 1
-        ax_macd = axes[current_index] if has_macd else None
-        if has_macd:
-            current_index += 1
-        ax_bbands = axes[current_index] if has_bbands else None
-        if has_bbands:
-            current_index += 1
-        ax_rsi = axes[current_index] if has_rsi else None
-        if has_rsi:
-            current_index += 1
-        ax_obv = axes[current_index] if has_obv else None
-
-        self._plot_candlesticks(ax_price, data)
-
-        for name, (series, params) in indicators.items():
-            if (
-                name.startswith("MACD")
-                or name.startswith("BBANDS")
-                or name.startswith("RSI")
-                or name.startswith("OBV")
-            ):
-                continue
-            ax_price.plot(series.index, series, label=f"{name} {params}", linewidth=1.5)
-
-        ax_price.set_ylabel("Price")
-        ax_price.legend()
-        grid_color = self.scheme.get("grid", None)
-        if grid_color is not None:
-            ax_price.grid(color=grid_color)
-        else:
-            ax_price.grid()
-        if len(data) > 50:
-            ax_price.xaxis.set_major_locator(mdates.AutoDateLocator())
-
-        if has_macd:
-            macd_key = next(name for name in indicators if "MACD" in name)
-            macd_data, params = indicators[macd_key]
-            self.plot_macd(ax_macd, macd_data, params)
-        if has_bbands:
-            bbands_key = next(name for name in indicators if "BBANDS" in name)
-            bbands_data, params = indicators[bbands_key]
-            self.plot_bbands(ax_bbands, bbands_data, params)
-        if has_rsi:
-            rsi_key = next(name for name in indicators if name.startswith("RSI"))
-            rsi_data, params = indicators[rsi_key]
-            self.plot_rsi(ax_rsi, rsi_data, params)
-        if has_obv:
-            obv_key = next(name for name in indicators if name.startswith("OBV"))
-            obv_data, _ = indicators[obv_key]
-            self.plot_obv(ax_obv, obv_data)
-
-        plt.tight_layout(rect=[0, 0, 1, 0.96])
-
-        # Save to file logic
-        if save:
-            self.save_plot(
-                fig,
-                save_dir=save_dir,
-                save_format=save_format,
-                save_dpi=save_dpi,
-                ticker=company_name,
-                interval=interval,
-                start_date=start_date,
-                end_date=end_date,
-            )
-
-        plt.show()
+        self.title = title
+        self.scheme = COLOR_SCHEMES.get(color_scheme, COLOR_SCHEMES["default"]).copy()
+        if up_color and up_color.lower() != "none":
+            self.scheme["up"] = up_color
+        if down_color and down_color.lower() != "none":
+            self.scheme["down"] = down_color
 
     def _plot_candlesticks(self, ax: Axes, data: pd.DataFrame):
         """Draw candlesticks on the given axis"""
@@ -205,17 +94,114 @@ class CandlestickPlotter(BasePlotter):
                 color="black",
                 linewidth=0.8,
             )
-
         ax.set_xlim(
             mdates.date2num(data.index.min()) - 1, mdates.date2num(data.index.max()) + 1
         )
         ax.xaxis_date()
         ax.xaxis.set_major_locator(mdates.AutoDateLocator())
-        ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
+        ax.xaxis.set_major_formatter(mdates.AutoDateFormatter("%Y-%m-%d"))
         plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha="right")
 
         price_range = data["High"].max().item() - data["Low"].min().item()
         margin = price_range * 0.05
-        ax.set_ylim(
-            data["Low"].min().item() - margin, data["High"].max().item() + margin
+        ax.set_ylim(data["Low"].min().item() - margin, data["High"].max().item() + margin)
+
+    def plot(
+        self,
+        data: pd.DataFrame,
+        indicators: dict,
+        column: str = "Close",
+        ticker: str = "Unknown",
+        save: bool = False,
+        save_dir: str = None,
+        save_format: str = "png",
+        save_dpi: int = 300,
+        interval: str = None,
+        start_date: str = None,
+        end_date: str = None,
+    ):
+        required_columns = ["Open", "High", "Low", "Close"]
+        if not all(col in data.columns for col in required_columns):
+            raise ValueError(
+                f"DataFrame must contain a OHLC columns for candlestick chart."
+            )
+
+        indicators_info = analyze_indicators(indicators)
+        subplot_count = indicators_info["subplot_count"]
+
+        fig, axes = plt.subplots(
+            subplot_count,
+            1,
+            figsize=(12, 6 + 2 * subplot_count),
+            gridspec_kw={"height_ratios": [3] + [1] * (subplot_count - 1)},
         )
+        if subplot_count == 1:
+            axes = [axes]
+
+        apply_color_scheme(fig, axes, self.scheme, self.title)
+        fig.suptitle(f"{self.title} - {ticker}", color=self.scheme["text"])
+
+        ax_map = assign_axes(axes, indicators_info)
+        ax_price: Axes = ax_map["price"]
+        ax_obv: Axes = ax_map["obv"]
+        ax_macd: Axes = ax_map["macd"]
+        ax_rsi: Axes = ax_map["rsi"]
+        ax_adx: Axes = ax_map["adx"]
+
+        self._plot_candlesticks(ax_price, data)
+
+        for name, (series, params) in indicators.items():
+            if (
+                name.startswith("MACD")
+                or name.startswith("BBANDS")
+                or name.startswith("RSI")
+                or name.startswith("OBV")
+            ):
+                continue
+            ax_price.plot(series.index, series, label=f"{name} {params}", linewidth=1.5)
+        if indicators_info["has_bbands"]:
+            bbands_key = next(name for name in indicators if "BBANDS" in name)
+            bbands_data, params = indicators[bbands_key]
+            plot_bbands(ax_price, bbands_data, params, self.scheme)
+        ax_price.set_ylabel("Price")
+        ax_price.legend()
+        ax_price.grid(color=self.scheme.get("grid", None))
+
+        if len(data) > 50:
+            ax_price.xaxis.set_major_locator(mdates.AutoDateLocator())
+
+        if indicators_info["has_obv"]:
+            obv_key = next(name for name in indicators if name.startswith("OBV"))
+            obv_data, _ = indicators[obv_key]
+            plot_obv(ax_obv, obv_data, self.scheme)
+
+        if indicators_info["has_macd"]:
+            macd_key = next(name for name in indicators if "MACD" in name)
+            macd_data, params = indicators[macd_key]
+            plot_macd(ax_macd, macd_data, params, self.scheme)
+
+        if indicators_info["has_rsi"]:
+            rsi_key = next(name for name in indicators if name.startswith("RSI"))
+            rsi_data, params = indicators[rsi_key]
+            plot_rsi(ax_rsi, rsi_data, params, self.scheme)
+
+        if indicators_info["has_adx"]:
+            adx_key = next(name for name in indicators if name.startswith("ADX"))
+            adx_data, params = indicators[adx_key]
+            plot_adx(ax_adx, adx_data, self.scheme)
+
+        plt.tight_layout(rect=[0, 0, 1, 0.96])
+
+        # Save plots to file
+        if save:
+            save_plot(
+                fig,
+                save_dir,
+                save_format,
+                save_dpi,
+                ticker,
+                interval,
+                start_date,
+                end_date,
+            )
+        plt.show()
