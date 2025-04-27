@@ -266,3 +266,95 @@ def save_plot(
     fig.savefig(filepath, format=format, dpi=save_dpi, bbox_inches="tight")
     print(f"Plot saved to: {os.path.abspath(filepath)}")
     return filepath
+
+
+def enable_interactive(fig: Figure):
+    """Enable interactive features for matplotlib"""
+    import matplotlib
+    matplotlib.interactive(True)
+    fig.canvas.mpl_connect("pick_event", lambda event: print(f"Picked: {event.artist}"))
+
+def plot_multi_ticker(
+        ax: Axes,
+        data_dict: dict[str, pd.DataFrame],
+        column: str,
+        scheme: dict,
+        normalize: bool = True,
+):
+    """Plot multiple tickers data on the same axis"""
+    for ticker, df in data_dict.items():
+        if column in df.columns and not df.empty:
+            series = df[column]
+            if normalize:
+                base = series.iloc[0]
+                pct = (series / base - 1) * 100
+                ax.plot(series.index, pct, label=f"{ticker} (% change)", linewidth=1.5)
+            else:
+                ax.plot(series.index, series, label=ticker, linewidth=1.5)
+    ax.set_ylabel(f"{column} (% change)" if normalize else column)
+    ax.legend()
+    ax.grid(color=scheme.get("grid", None))
+
+
+def plot_multi_candlestick(
+        ax: Axes,
+        data_dict: dict[str, pd.DataFrame],
+        scheme: dict,
+        normalize: bool = True,
+):
+    """Plot multiple tickers as normalized candlesticks (body = % change from open)"""
+    import matplotlib.dates as mdates
+    from matplotlib.patches import Rectangle
+    import numpy as np
+
+    for ticker, data in data_dict.items():
+        if not all(col in data.columns for col in ["Open", "High", "Low", "Close"]):
+            continue
+        data = data.sort_index()
+        date_nums = [mdates.date2num(d) for d in data.index]
+        if len(data) > 1:
+            diffs = [b - a for a, b in zip(date_nums[:-1], date_nums[1:])]
+            width = np.median(diffs) * 0.7
+        else:
+            width = 0.6
+
+        first_open = data["Open"].iloc[0]
+        for date, row in data.iterrows():
+            x = mdates.date2num(date)
+            o, h, l, c = row["Open"], row["High"], row["Low"], row["Close"]
+            if normalize:
+                o = (o / first_open - 1) * 100
+                h = (h / first_open - 1) * 100
+                l = (l / first_open - 1) * 100
+                c = (c / first_open - 1) * 100
+            color = scheme["up"] if c >= o else scheme["down"]
+            body_bottom = min(o, c)
+            body_height = abs(c - o)
+            rect = Rectangle(
+                xy=(x - width / 2, body_bottom),
+                width=width,
+                height=body_height,
+                facecolor=color,
+                edgecolor="black",
+                linewidth=0.5,
+                alpha=0.5,
+                label=f"{ticker}" if date == data.index[0] else None,
+            )
+            ax.add_patch(rect)
+            ax.plot(
+                [x, x],
+                [max(o, c), h],
+                color="black",
+                linewidth=0.8,
+                alpha=0.5
+            )
+            ax.plot(
+                [x, x],
+                [min(o, c), l],
+                color="black",
+                linewidth=0.8,
+                alpha=0.5
+            )
+    ax.set_ylabel("Price (% change)" if normalize else "Price")
+    ax.legend()
+    ax.grid(color=scheme.get("grid", None))

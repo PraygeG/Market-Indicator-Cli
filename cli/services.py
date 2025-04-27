@@ -30,7 +30,7 @@ def fetch_all_data(
     interval: str,
     source: str,
     delay=1,
-):
+)-> dict[str: pd.DataFrame]:
     if source == "yfinance":
         src = YfinanceSource()
     elif source == "alphavantage":
