@@ -120,5 +120,9 @@ class ADX(BaseIndicator):
                 "DX",
             ]
         )
+        result = pd.DataFrame(index=data.index)
+        result["ADX"] = df["ADX"]
+        result["minus_DI"] = df["minus_DI"]
+        result["plus_DI"] = df["plus_DI"]
 
-        return df[["plus_DI", "minus_DI", "ADX"]]
+        return result

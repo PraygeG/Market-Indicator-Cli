@@ -271,15 +271,17 @@ def save_plot(
 def enable_interactive(fig: Figure):
     """Enable interactive features for matplotlib"""
     import matplotlib
+
     matplotlib.interactive(True)
     fig.canvas.mpl_connect("pick_event", lambda event: print(f"Picked: {event.artist}"))
 
+
 def plot_multi_ticker(
-        ax: Axes,
-        data_dict: dict[str, pd.DataFrame],
-        column: str,
-        scheme: dict,
-        normalize: bool = True,
+    ax: Axes,
+    data_dict: dict[str, pd.DataFrame],
+    column: str,
+    scheme: dict,
+    normalize: bool = True,
 ):
     """Plot multiple tickers data on the same axis"""
     for ticker, df in data_dict.items():
@@ -297,10 +299,10 @@ def plot_multi_ticker(
 
 
 def plot_multi_candlestick(
-        ax: Axes,
-        data_dict: dict[str, pd.DataFrame],
-        scheme: dict,
-        normalize: bool = True,
+    ax: Axes,
+    data_dict: dict[str, pd.DataFrame],
+    scheme: dict,
+    normalize: bool = True,
 ):
     """Plot multiple tickers as normalized candlesticks (body = % change from open)"""
     import matplotlib.dates as mdates
@@ -341,20 +343,8 @@ def plot_multi_candlestick(
                 label=f"{ticker}" if date == data.index[0] else None,
             )
             ax.add_patch(rect)
-            ax.plot(
-                [x, x],
-                [max(o, c), h],
-                color="black",
-                linewidth=0.8,
-                alpha=0.5
-            )
-            ax.plot(
-                [x, x],
-                [min(o, c), l],
-                color="black",
-                linewidth=0.8,
-                alpha=0.5
-            )
+            ax.plot([x, x], [max(o, c), h], color="black", linewidth=0.8, alpha=0.5)
+            ax.plot([x, x], [min(o, c), l], color="black", linewidth=0.8, alpha=0.5)
     ax.set_ylabel("Price (% change)" if normalize else "Price")
     ax.legend()
     ax.grid(color=scheme.get("grid", None))

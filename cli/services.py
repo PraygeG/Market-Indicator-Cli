@@ -30,7 +30,7 @@ def fetch_all_data(
     interval: str,
     source: str,
     delay=1,
-)-> dict[str: pd.DataFrame]:
+) -> dict[str : pd.DataFrame]:
     if source == "yfinance":
         src = YfinanceSource()
     elif source == "alphavantage":
@@ -91,6 +91,10 @@ def plot_data(
     interval=None,
     start_date=None,
     end_date=None,
+    multi=False,
+    normalize=False,
+    interactive=False,
+    data_dict=None,
 ):
     title = f"Stock analysis for {ticker}"
     if plot_style == "candlestick":
@@ -100,6 +104,8 @@ def plot_data(
             up_color=up_color,
             down_color=down_color,
         )
+        if multi and data_dict:
+            plotter.plot_multi(data_dict, normalize=normalize, interactive=interactive)
     else:
         plotter = Plotter(
             title=title,
@@ -107,6 +113,8 @@ def plot_data(
             up_color=up_color,
             down_color=down_color,
         )
+        if multi and data_dict:
+            plotter.plot_multi(data_dict, normalize=normalize, interactive=interactive)
     plotter.plot(
         data,
         indicators,
