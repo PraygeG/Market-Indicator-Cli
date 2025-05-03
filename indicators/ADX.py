@@ -22,107 +22,147 @@ class ADX(BaseIndicator):
         self.close_column = close_column
 
     def calculate(self, data: pd.DataFrame) -> pd.DataFrame:
-        df = data.copy()
+        result = pd.DataFrame(index=data.index)
 
-        required_cols = [self.high_column, self.low_column, self.close_column]
-        if not all(col in df.columns for col in required_cols):
-            raise ValueError(
-                f"Input DataFrame missing required columns: {required_cols}"
+        try:
+            high_data, low_data, close_data = self._extract_price_data(data)
+            df = pd.DataFrame(
+                {
+                    "High": pd.to_numeric(high_data, errors="coerce"),
+                    "Low": pd.to_numeric(low_data, errors="coerce"),
+                    "Close": pd.to_numeric(close_data, errors="coerce"),
+                },
+                index=data.index,
+            )
+            df.dropna(inplace=True)
+
+            if df.empty:
+                return pd.DataFrame(
+                    columns=["plus_DI", "minus_DI", "ADX"], index=data.index
+                )
+
+            # Calculate True Range and Directional Movement
+            high_shift = df["High"].shift(1)
+            low_shift = df["Low"].shift(1)
+            close_shift = df["Close"].shift(1)
+
+            tr1 = df["High"] - df["Low"]
+            tr2 = (df["High"] - close_shift).abs()
+            tr3 = (df["Low"] - close_shift).abs()
+
+            df["TR"] = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+
+            up_move = df["High"] - high_shift
+            down_move = low_shift - df["Low"]
+
+            df["plus_DM"] = np.where((up_move > down_move) & (up_move > 0), up_move, 0)
+            df["minus_DM"] = np.where(
+                (down_move > up_move) & (down_move > 0), down_move, 0
             )
 
-        for col in required_cols:
-            df[col] = pd.to_numeric(df[col], errors="coerce")
+            # Apply smoothing
+            df["smoothed_TR"] = self._wilders_smoothing(df["TR"])
+            df["smoothed_plus_DM"] = self._wilders_smoothing(df["plus_DM"])
+            df["smoothed_minus_DM"] = self._wilders_smoothing(df["minus_DM"])
 
-        df.dropna(subset=required_cols, inplace=True)
-        if df.empty:
-            print(f"DataFrame is empty after handling non-numeric data or NaNs.")
-            return pd.DataFrame(columns=["plus_DI", "minus_DI", "ADX"])
+            df["plus_DI"] = np.where(
+                df["smoothed_TR"] > 0,
+                (df["smoothed_plus_DM"] / df["smoothed_TR"]) * 100,
+                0,
+            )
+            df["minus_DI"] = np.where(
+                df["smoothed_TR"] > 0,
+                (df["smoothed_minus_DM"] / df["smoothed_TR"]) * 100,
+                0,
+            )
 
-        # Calculate True Range (max of 3 different differencials)
-        df["TR1"] = df[self.high_column] - df["Low"]
-        df["TR2"] = abs(df["High"] - df["Close"].shift(1))
-        df["TR3"] = abs(df["Low"] - df["Close"].shift(1))
-        df["TR"] = df[["TR1", "TR2", "TR3"]].max(axis=1)
-        df.drop(columns=["TR1", "TR2", "TR3"], inplace=True)
+            # Calculate DX
+            di_diff = abs(df["plus_DI"] - df["minus_DI"])
+            di_sum = df["plus_DI"] + df["minus_DI"]
+            df["DX"] = np.where(di_sum > 0, (di_diff / di_sum) * 100, 0)
 
-        # Calculate Directional Movement (+DM and -DM)
-        # +DM = curr High - prev High if > prev Low - curr Low and > 0
-        # -DM = prev Low - curr Low if > curr High - prev High and > 0
-        move_up = df[self.high_column] - df[self.high_column].shift(1)
-        move_down = df[self.low_column].shift(1) - df[self.low_column]
-        plus_DM = move_up.clip(lower=0)
-        minus_DM = move_down.clip(lower=0)
+            # Calculate ADX
+            df["ADX"] = w(df["DX"], self.window)
 
-        # If move_up > move_down, use plus_DM, otherwise 0
-        # if move_down > move_up, use minus_DM, oterwise 0
-        df["plus_DM"] = np.where((move_up > move_down) & (move_up > 0), move_up, 0)
-        df["minus_DM"] = np.where((move_down > move_up) & (move_down > 0), move_down, 0)
+            result = pd.DataFrame(index=data.index)
+            result.loc[df.index, "ADX"] = df["ADX"]
+            result.loc[df.index, "plus_DI"] = df["plus_DI"]
+            result.loc[df.index, "minus_DI"] = df["minus_DI"]
 
-        # Apply Wilder's Smoothing (type of EMA)
-        # SMV = Previous_SMV - (Previous_SMV / window) + Current_Value
-        # or SMV = (Previous_SMV * (window - 1) + Current_Value) / window
+            return result
 
-        def wilders_smoothing_series(series: pd.Series):
-            series = series.astype(float)
-            # Calculate the first sum (for the value at index window - 1)
-            first_smoothed_val = series.iloc[: self.window].sum()
+        except Exception as e:
+            print(f"Error calculating ADX: {e}")
+            import traceback
 
-            smv = pd.Series(np.nan, index=series.index)
+            traceback.print_exc()
+            return pd.DataFrame(
+                columns=["plus_DI", "minus_DI", "ADX"], index=data.index
+            )
 
-            if len(series) >= self.window:
-                smv.iloc[self.window - 1] = first_smoothed_val
-                for i in range(self.window, len(series)):
-                    if pd.isna(smv.iloc[i - 1]) or pd.isna(series.iloc[i]):
-                        smv.iloc[i] = np.nan
-                    else:
-                        smv.iloc[i] = (
-                            smv.iloc[i - 1] * (self.window - 1) + series.iloc[i]
-                        ) / self.window
-            return smv
+    def _extract_price_data(self, data: pd.DataFrame):
+        if isinstance(data.columns, pd.MultiIndex):
+            high_col = self._find_matching_column(data.columns, self.high_column)
+            low_col = self._find_matching_column(data.columns, self.low_column)
+            close_col = self._find_matching_column(data.columns, self.close_column)
 
-        df["Smoothed_TR"] = wilders_smoothing_series(df["TR"])
-        df["Smoothed_plus_DM"] = wilders_smoothing_series(df["plus_DM"])
-        df["Smoothed_minus_DM"] = wilders_smoothing_series(df["minus_DM"])
+            if not all([high_col, low_col, close_col]):
+                missing = []
+                if not high_col:
+                    missing.append(self.high_column)
+                if not low_col:
+                    missing.append(self.low_column)
+                if not close_col:
+                    missing.append(self.close_column)
+                raise ValueError(
+                    f"Could not find required columns in MultiIndex: {','.join(missing)}"
+                )
+            print(f"Using columns: High={high_col}, Low={low_col}, Close={close_col}")
 
-        # Calculate Directional Indicators
-        df["plus_DI"] = (df["Smoothed_plus_DM"] / df["Smoothed_TR"]) * 100
-        df["minus_DI"] = (df["Smoothed_minus_DM"] / df["Smoothed_TR"]) * 100
+            try:
+                high_series = data[high_col]
+                low_series = data[low_col]
+                close_series = data[close_col]
+                return high_series, low_series, close_series
+            except Exception as e:
+                print(f"Error extracting data from MultiIndex: {e}")
+                raise
+        else:
+            required_cols = [self.high_column, self.low_column, self.close_column]
+            missing_cols = [col for col in required_cols if col not in data.columns]
 
-        # Handle potential division by 0 if Smoothed_TR is 0
-        df["plus_DI"] = np.where(
-            df["Smoothed_TR"] != 0,
-            (df["Smoothed_plus_DM"] / df["Smoothed_TR"]) * 100,
-            0,
-        )
-        df["minus_DI"] = np.where(
-            df["Smoothed_TR"] != 0,
-            (df["Smoothed_minus_DM"] / df["Smoothed_TR"]) * 100,
-            0,
-        )
+            if missing_cols:
+                raise ValueError(f"DataFrame missing required columns: {missing_cols}")
 
-        # Calculate Directional Index (DX)
-        di_diff = abs(df["plus_DI"] - df["minus_DI"])
-        di_sum = df["plus_DI"] + df["minus_DI"]
-        # Use np.where for save division
-        df["DX"] = np.where(di_sum != 0, (di_diff / di_sum) * 100, 0)
+            return (
+                data[self.high_column],
+                data[self.low_column],
+                data[self.close_column],
+            )
 
-        # Average Directional Index
-        df["ADX"] = wilders_smoothing_series(df["DX"])
+    def _find_matching_column(self, columns, column_name):
+        if column_name in columns:
+            return column_name
 
-        df = df.drop(
-            columns=[
-                "TR",
-                "plus_DM",
-                "minus_DM",
-                "Smoothed_TR",
-                "Smoothed_plus_DM",
-                "Smoothed_minus_DM",
-                "DX",
-            ]
-        )
-        result = pd.DataFrame(index=data.index)
-        result["ADX"] = df["ADX"]
-        result["minus_DI"] = df["minus_DI"]
-        result["plus_DI"] = df["plus_DI"]
+        matches = [col for col in columns if column_name if str(col)]
+        return matches[0] if matches else None
 
-        return result
+    def _wilders_smoothing(self, series: pd.Series) -> pd.Series:
+        series = pd.Series(series).astype(float)
+
+        smoothed = pd.Series(index=series.index, dtype=float)
+
+        if len(series) >= self.window:
+            smoothed.iloc[self.window - 1] = (
+                series.iloc[: self.window].mean() * self.window
+            )
+
+            for i in range(self.window, len(series)):
+                smoothed.iloc[i] = (
+                    smoothed.iloc[i - 1]
+                    - (smoothed.iloc[i - 1] / self.window)
+                    + series.iloc[i]
+                )
+
+        smoothed = smoothed / self.window
+        return smoothed

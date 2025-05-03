@@ -47,16 +47,11 @@ def _run_pipeline(config: dict[str, any]):
         config["interval"],
         config["data_source"],
     )
-    # all_data = fetcher.fetch_all(
-    #    config["tickers"], config["start_date"], config["end_date"], config["interval"]
-    # )
-
     for ticker, data in all_data.items():
         if data.empty:
             print(f"No data found for {ticker}. Skipping...")
             continue
         indicators = run_indicators(data, config["indicators"], config["column"])
-
         plot_data(
             data,
             indicators,
@@ -72,6 +67,8 @@ def _run_pipeline(config: dict[str, any]):
             interval=config["interval"],
             start_date=config["start_date"],
             end_date=config["end_date"],
+            normalize=config.get("normalize"),
+            interactive=config.get("interactive"),
         )
 
 

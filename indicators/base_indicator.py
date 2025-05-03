@@ -11,5 +11,5 @@ class BaseIndicator(ABC):
         self.column = column
 
     @abstractmethod
-    def calculate(self, data: pd.DataFrame, columns: str | list[str]) -> pd.Series:
+    def calculate(self, data: pd.DataFrame) -> pd.Series:
         pass

@@ -80,6 +80,16 @@ def plot_options(f):
         default=None,
         help="Custom color for down candles/bars (overrides color scheme)",
     )(f)
+    f = click.option(
+        "--normalize",
+        is_flag=True,
+        help="Normalize the data for easier comparison between multiple tickers.",
+    )(f)
+    f = click.option(
+        "--interactive",
+        is_flag=True,
+        help="Enable interactive plot.",
+    )(f)
     return f
 
 

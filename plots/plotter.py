@@ -1,8 +1,9 @@
+import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 import pandas as pd
-from typing import Optional
+import numpy as np
 from plots.plot_methods import (
     COLOR_SCHEMES,
     apply_color_scheme,
@@ -14,7 +15,6 @@ from plots.plot_methods import (
     analyze_indicators,
     assign_axes,
     save_plot,
-    plot_multi_ticker,
     enable_interactive,
 )
 
@@ -47,7 +47,8 @@ class Plotter:
         interval: str = None,
         start_date: str = None,
         end_date: str = None,
-        multi_ticker: bool = False,
+        normalize: bool = False,
+        interactive: bool = False,
     ):
         if column not in data.columns:
             raise ValueError(f"DataFrame must contain a '{column}' column.")
@@ -132,22 +133,12 @@ class Plotter:
                 start_date,
                 end_date,
             )
-
-        plt.show()
-
-    def plot_multi(
-        self,
-        data_dict: dict[str, pd.DataFrame],
-        normalize: bool = True,
-        interactive: bool = False,
-        **kwargs,
-    ):
-        """
-        Plot multiple tickers with optional indicators
-        """
-        fig, ax = plt.subplots(figsize=(12, 6))
-        plot_multi_ticker(ax, data_dict, column, self.scheme, normalize=normalize)
+        # Enable interactive plots
         if interactive:
             enable_interactive(fig)
-        plt.tight_layout()
-        plt.show()
+            plt.draw()
+            plt.gcf().canvas.mpl_connect("close_event", lambda evt: plt.close("all"))
+            print("Interactive plot enabled. Close the plot window to continue.")
+            plt.show(block=True)
+        else:
+            plt.show()

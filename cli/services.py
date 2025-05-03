@@ -30,7 +30,7 @@ def fetch_all_data(
     interval: str,
     source: str,
     delay=1,
-) -> dict[str : pd.DataFrame]:
+) -> dict[str, pd.DataFrame]:
     if source == "yfinance":
         src = YfinanceSource()
     elif source == "alphavantage":
@@ -55,11 +55,11 @@ def run_indicators(
         if not indicator_class:
             continue
         if name == "OBV":
-            indicator = indicator_class()
+            indicator = indicator_class(name)
             calculated_series = indicator.calculate(data)
             calculated[name] = (calculated_series, params)
         elif name == "ADX":
-            indicator = indicator_class(*params)
+            indicator = indicator_class(name, params)
             calculated_series = indicator.calculate(data)
             calculated[f"{name}_{'_'.join(map(str, params))}"] = (
                 calculated_series,
@@ -76,25 +76,23 @@ def run_indicators(
 
 
 def plot_data(
-    data,
-    indicators,
+    data: dict[str, pd.DataFrame],
+    indicators: dict[str, tuple[pd.DataFrame | pd.Series, list[int]]],
     column: str,
-    ticker,
+    ticker: str,
     plot_style="line",
     color_scheme="default",
-    up_color=None,
-    down_color=None,
-    save=False,
-    save_dir=None,
-    save_format="png",
-    save_dpi=300,
-    interval=None,
-    start_date=None,
-    end_date=None,
-    multi=False,
-    normalize=False,
-    interactive=False,
-    data_dict=None,
+    up_color: str = None,
+    down_color: str = None,
+    save: bool = False,
+    save_dir: str = None,
+    save_format: str = "png",
+    save_dpi: int = 300,
+    interval: str = None,
+    start_date: str = None,
+    end_date: str = None,
+    normalize: bool = None,
+    interactive: bool = None,
 ):
     title = f"Stock analysis for {ticker}"
     if plot_style == "candlestick":
@@ -104,8 +102,6 @@ def plot_data(
             up_color=up_color,
             down_color=down_color,
         )
-        if multi and data_dict:
-            plotter.plot_multi(data_dict, normalize=normalize, interactive=interactive)
     else:
         plotter = Plotter(
             title=title,
@@ -113,8 +109,6 @@ def plot_data(
             up_color=up_color,
             down_color=down_color,
         )
-        if multi and data_dict:
-            plotter.plot_multi(data_dict, normalize=normalize, interactive=interactive)
     plotter.plot(
         data,
         indicators,
@@ -127,4 +121,6 @@ def plot_data(
         interval=interval,
         start_date=start_date,
         end_date=end_date,
+        normalize=normalize,
+        interactive=interactive,
     )

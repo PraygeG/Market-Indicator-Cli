@@ -15,7 +15,6 @@ from plots.plot_methods import (
     analyze_indicators,
     assign_axes,
     save_plot,
-    plot_multi_candlestick,
     enable_interactive,
 )
 
@@ -209,17 +208,3 @@ class CandlestickPlotter:
                 end_date,
             )
         plt.show()
-
-    def plot_multi(
-        self,
-        data_dict: dict[str, pd.DataFrame],
-        normalize: bool = True,
-        interactive: bool = False,
-        **kwargs,
-    ):
-        fig, ax = plt.subplots(figsize=(12, 6))
-        plot_multi_candlestick(ax, data_dict, self.scheme, normalize=normalize)
-        if interactive:
-            enable_interactive(fig)
-            plt.tight_layout()
-            plt.show()

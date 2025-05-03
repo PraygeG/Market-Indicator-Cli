@@ -1,7 +1,11 @@
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
+import matplotlib as plt
 import pandas as pd
+import numpy as np
 from typing import Any, Dict, Optional, Sequence
+from matplotlib.widgets import Cursor, SpanSelector, RectangleSelector, TextBox, Button
+import matplotlib as mpl
 
 COLOR_SCHEMES = {
     "default": {
@@ -268,83 +272,172 @@ def save_plot(
     return filepath
 
 
-def enable_interactive(fig: Figure):
+def enable_interactive(fig: Figure, axes: Sequence[Axes], data: pd.DataFrame = None):
     """Enable interactive features for matplotlib"""
-    import matplotlib
+    try:
+        import mplcursors
+    except ImportError:
+        print(
+            "For full interactive features, please install mplcursors: pip install mplcursors"
+        )
+        has_mplcursors = False
+    else:
+        has_mplcursors = True
 
-    matplotlib.interactive(True)
-    fig.canvas.mpl_connect("pick_event", lambda event: print(f"Picked: {event.artist}"))
+    fig._interactive_elements = {}
 
+    for ax in axes:
+        cursor_obj = Cursor(ax, useblit=True, color="gray", linewidth=0.5)
+        fig._interactive_elements["cursor"] = cursor_obj
 
-def plot_multi_ticker(
-    ax: Axes,
-    data_dict: dict[str, pd.DataFrame],
-    column: str,
-    scheme: dict,
-    normalize: bool = True,
-):
-    """Plot multiple tickers data on the same axis"""
-    for ticker, df in data_dict.items():
-        if column in df.columns and not df.empty:
-            series = df[column]
-            if normalize:
-                base = series.iloc[0]
-                pct = (series / base - 1) * 100
-                ax.plot(series.index, pct, label=f"{ticker} (% change)", linewidth=1.5)
-            else:
-                ax.plot(series.index, series, label=ticker, linewidth=1.5)
-    ax.set_ylabel(f"{column} (% change)" if normalize else column)
-    ax.legend()
-    ax.grid(color=scheme.get("grid", None))
+    if has_mplcursors:
+        c = mplcursors.cursor(hover=True)
 
+        @c.connect("add")
+        def on_add(sel):
+            x, y = sel.target
+            try:
+                if isinstance(data.index, pd.DatetimeIndex):
+                    date_str = pd.to_datetime(x).strftime("%Y-%m-%d")
+                    sel.annatation.set_text(f"Date: {date_str}\nValue: {y:.2f}")
+                else:
+                    sel.annotation.set_text(f"X: {x:.2f}\nY: {y:.2f}")
+            except:
+                sel.annotation.set_text(f"X: {x:.2f}\nY: {y:.2f}")
 
-def plot_multi_candlestick(
-    ax: Axes,
-    data_dict: dict[str, pd.DataFrame],
-    scheme: dict,
-    normalize: bool = True,
-):
-    """Plot multiple tickers as normalized candlesticks (body = % change from open)"""
-    import matplotlib.dates as mdates
-    from matplotlib.patches import Rectangle
-    import numpy as np
+        fig._interactive_elements["tooltips"] = c
 
-    for ticker, data in data_dict.items():
-        if not all(col in data.columns for col in ["Open", "High", "Low", "Close"]):
-            continue
-        data = data.sort_index()
-        date_nums = [mdates.date2num(d) for d in data.index]
-        if len(data) > 1:
-            diffs = [b - a for a, b in zip(date_nums[:-1], date_nums[1:])]
-            width = np.median(diffs) * 0.7
-        else:
-            width = 0.6
+    ax_price = axes[0]
 
-        first_open = data["Open"].iloc[0]
-        for date, row in data.iterrows():
-            x = mdates.date2num(date)
-            o, h, l, c = row["Open"], row["High"], row["Low"], row["Close"]
-            if normalize:
-                o = (o / first_open - 1) * 100
-                h = (h / first_open - 1) * 100
-                l = (l / first_open - 1) * 100
-                c = (c / first_open - 1) * 100
-            color = scheme["up"] if c >= o else scheme["down"]
-            body_bottom = min(o, c)
-            body_height = abs(c - o)
-            rect = Rectangle(
-                xy=(x - width / 2, body_bottom),
-                width=width,
-                height=body_height,
-                facecolor=color,
-                edgecolor="black",
-                linewidth=0.5,
-                alpha=0.5,
-                label=f"{ticker}" if date == data.index[0] else None,
-            )
-            ax.add_patch(rect)
-            ax.plot([x, x], [max(o, c), h], color="black", linewidth=0.8, alpha=0.5)
-            ax.plot([x, x], [min(o, c), l], color="black", linewidth=0.8, alpha=0.5)
-    ax.set_ylabel("Price (% change)" if normalize else "Price")
-    ax.legend()
-    ax.grid(color=scheme.get("grid", None))
+    def on_select_zoom(eclick, erelease):
+        x1, y1 = eclick.xdata, eclick.ydata
+        x2, y2 = erelease.xdata, erelease.ydata
+        if abs(x2 - x1) > 10 and abs(y2 - y1) > 10:
+            for ax in axes:
+                curr_xlim = ax.get_xlim()
+                curr_ylim = ax.get_ylim()
+
+                if ax == ax_price:
+                    new_ylim = sorted([y1, y2])
+                else:
+                    new_ylim = curr_ylim
+
+                ax.set_xlim(sorted([x1, x2]))
+                ax.set_ylim(new_ylim)
+            fig.canvas.draw_idle()
+
+    rect_selector = RectangleSelector(
+        ax_price,
+        on_select_zoom,
+        useblit=True,
+        button=[1],
+        minspanx=5,
+        minspany=5,
+        spancoords="pixels",
+        interactive=True,
+    )
+    fig._interactive_elements["rect_selector"] = rect_selector
+
+    def reset_zoom(event):
+        for ax in axes:
+            ax.relim()
+            ax.autoscale()
+        fig.canvas.draw_idle()
+
+    reset_button_ax = fig.add_axes([0.85, 0.01, 0.1, 0.03])
+    reset_button = Button(reset_button_ax, "Reset Zoom")
+    reset_button.on_clicked(reset_zoom)
+    fig._interactive_elements["reset_button"] = reset_button
+
+    def on_span_select(xmin, xmax):
+        print(f"Selected range: {xmin:.2f} to {xmax:.2f}")
+
+        try:
+            if isinstance(data.index, pd.DatetimeIndex):
+                xmin_idx = np.argmin(np.abs(np.array(data.index.astype(float)) - xmin))
+                xmax_idx = np.argmin(np.abs(np.array(data.index.astype(float)) - xmax))
+
+                date_range = data.iloc[xmin_idx : xmax_idx + 1]
+
+                if not date_range.empty:
+                    print(
+                        f"Date range: {date_range.index[0].strftime("%Y-%m-%d")} to {date_range.index[-1].strftime("%Y-%m-%d")}"
+                    )
+
+                    price_col = date_range.columns[0]
+
+                    stats = {
+                        "Start": date_range.index[0].strftime("%Y-%m-%d"),
+                        "End": date_range.index[-1].strftime("%Y-%m-%d"),
+                        "Min": date_range[price_col].min(),
+                        "Max": date_range[price_col].max(),
+                        "Mean": date_range[price_col].mean(),
+                        "% Change": (
+                            (
+                                date_range[price_col].iloc[-1]
+                                / date_range[price_col].iloc[0]
+                            )
+                            - 1
+                        )
+                        * 100,
+                    }
+
+                    print("\nSelected Range Statistics:")
+                    for k, v in stats.items():
+                        if isinstance(v, float):
+                            print(f"  {k}: {v:.2f}")
+                        else:
+                            print(f"  {k}: {v}")
+                else:
+                    print("No data points in selected range")
+        except Exception as e:
+            print(f"Error analyzing selection: {e}")
+
+    span_selector = SpanSelector(
+        ax_price,
+        on_span_select,
+        "horizontal",
+        useblit=True,
+        rectprops=dict(alpha=0.3, facecolor="lightblue"),
+        button=[3],
+    )
+    fig._interactive_elements["span_selector"] = span_selector
+
+    def on_key_press(event):
+        if event.key == "r":
+            reset_zoom(event)
+        elif event.key == "s":
+            import os
+            from datetime import datetime
+
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filepath = f"quick_save_{timestamp}.png"
+            fig.savefig(filepath, dpi=300, bbox_inches="tight")
+            print(f"Quick saved to: {os.path.abspath(filepath)}")
+
+    fig.canvas.mpl_connect("key_press_event", on_key_press)
+
+    instruction_text = """
+    Interactive controls:
+    • Click & drag left button: Zoom to rectangle
+    • Click & drag right button: Analyze time range
+    • Hover: Show data points
+    • 'r' key: Reset zoom
+    • 's' key: Quick save
+    """
+    fig.text(
+        0.01,
+        0.01,
+        instruction_text,
+        fontsize=8,
+        verticalalignment="bottom",
+        bbox=dict(boxtyle="round", facecolor="white", alpha=0.08),
+    )
+
+    print("Interactive mode enabled with the following features:")
+    print("- Hover over data points to see values")
+    print("- Left-click and drag to zoom into an area")
+    print("- Right-click and drag to analyze a time range")
+    print("- Press 'r' to reset zoom")
+    print("- Press 's' to quick save the current view")
+    print("- Click 'Reset Zoom' button to reset the view")
