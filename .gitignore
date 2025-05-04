@@ -9,3 +9,4 @@ Pipfile/
 Pipfile.lock/
 requirements.txt/
 tests/
+.idea/
