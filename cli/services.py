@@ -9,6 +9,8 @@ from indicators.OBV import OBV
 from indicators.ADX import ADX
 from plots.plotter import Plotter
 from plots.candlestick_plotter import CandlestickPlotter
+from plots.multi_plotter import MultiTickerPlotter
+from typing import Optional
 import pandas as pd
 import time
 
@@ -46,9 +48,47 @@ def fetch_all_data(
     return data_dict
 
 
+def run_multi_ticker_indicators(
+    ticker_data: dict[str, pd.DataFrame],
+    indicators: list[tuple[str, list[int]]],
+    column: str = "Close",
+) -> dict[str, tuple[pd.DataFrame | pd.Series, Optional[list[int]]]]:
+    calculated = {}
+
+    for name, params in indicators:
+        indicator_class = INDICATOR_CLASSES.get(name)
+        if not indicator_class:
+            continue
+        if name == "OBV":
+            result_df = pd.DataFrame()
+            for ticker, data in ticker_data.items():
+                indicator = indicator_class(name)
+                series = indicator.calculate(data)
+                result_df[ticker] = series
+            calculated[name] = (result_df, params)
+
+        elif name == "ADX":
+            result_df = pd.DataFrame()
+            for ticker, data in ticker_data.items():
+                indicator = indicator_class(name, params)
+                series = indicator.calculate(data)
+                result_df[ticker] = series
+            calculated[f"{name}_{"_".join(map(str, params))}"] = (result_df, params)
+
+        else:
+            result_df = pd.DataFrame()
+            for ticker, data in ticker_data.items():
+                indicator = indicator_class(*params, column=column)
+                series = indicator.calculate(data)
+                result_df[ticker] = series
+            calculated[f"{name}_{"_".join(map(str, params))}"] = (result_df, params)
+
+    return calculated
+
+
 def run_indicators(
-    data: dict[str, pd.DataFrame], indicators: list[tuple[str, list[int]]], column: str
-) -> dict[str, tuple[pd.DataFrame | pd.Series, list[int]]]:
+    data: pd.DataFrame, indicators: list[tuple[str, list[int]]], column: str
+) -> dict[str, tuple[pd.DataFrame | pd.Series, Optional[list[int]]]]:
     calculated = {}
     for name, params in indicators:
         indicator_class = INDICATOR_CLASSES.get(name)
@@ -91,8 +131,10 @@ def plot_data(
     interval: str = None,
     start_date: str = None,
     end_date: str = None,
-    normalize: bool = None,
     interactive: bool = None,
+    multi_plot: bool = False,
+    normalize: bool = False,
+    log_scale: bool = False,
 ):
     title = f"Stock analysis for {ticker}"
     if plot_style == "candlestick":
@@ -121,6 +163,23 @@ def plot_data(
         interval=interval,
         start_date=start_date,
         end_date=end_date,
-        normalize=normalize,
         interactive=interactive,
+    )
+
+
+def plot_multi(
+    data: dict[str, pd.DataFrame],
+    indicators: dict,
+    column: str,
+    normalize: bool,
+    log_scale: bool,
+) -> None:
+    plotter = MultiTickerPlotter(
+        normalize=normalize,
+        log_scale=log_scale,
+    )
+    plotter.plot(
+        data,
+        indicators,
+        column,
     )

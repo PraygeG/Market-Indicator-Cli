@@ -1,6 +1,12 @@
 import click
 from cli.options import common_options
-from cli.services import fetch_all_data, run_indicators, plot_data
+from cli.services import (
+    fetch_all_data,
+    run_indicators,
+    run_multi_ticker_indicators,
+    plot_data,
+    plot_multi,
+)
 from validators.input_and_validation import (
     get_valid_date,
     get_valid_indicators,
@@ -47,29 +53,45 @@ def _run_pipeline(config: dict[str, any]):
         config["interval"],
         config["data_source"],
     )
-    for ticker, data in all_data.items():
-        if data.empty:
-            print(f"No data found for {ticker}. Skipping...")
-            continue
-        indicators = run_indicators(data, config["indicators"], config["column"])
-        plot_data(
-            data,
-            indicators,
-            config["column"],
-            ticker,
-            plot_style=config.get("plot_style"),
-            color_scheme=config.get("color_scheme"),
-            up_color=config.get("up_color"),
-            down_color=config.get("down_color"),
-            save=config.get("save"),
-            save_dir=config.get("save_dir"),
-            save_dpi=config.get("save_dpi"),
-            interval=config["interval"],
-            start_date=config["start_date"],
-            end_date=config["end_date"],
-            normalize=config.get("normalize"),
-            interactive=config.get("interactive"),
+    if config["multi_plot"]:
+        indicators = run_multi_ticker_indicators(
+            ticker_data=all_data,
+            indicators=config["indicators"],
+            column=config["column"],
         )
+        plot_multi(
+            data=all_data,
+            indicators=indicators,
+            column=config["column"],
+            normalize=config["normalize"],
+            log_scale=config["log_scale"],
+        )
+    else:
+        for ticker, data in all_data.items():
+            if data.empty:
+                print(f"No data found for {ticker}. Skipping...")
+                continue
+            indicators = run_indicators(data, config["indicators"], config["column"])
+            plot_data(
+                data,
+                indicators,
+                config["column"],
+                ticker,
+                plot_style=config.get("plot_style"),
+                color_scheme=config.get("color_scheme"),
+                up_color=config.get("up_color"),
+                down_color=config.get("down_color"),
+                save=config.get("save"),
+                save_dir=config.get("save_dir"),
+                save_dpi=config.get("save_dpi"),
+                interval=config["interval"],
+                start_date=config["start_date"],
+                end_date=config["end_date"],
+                interactive=config.get("interactive"),
+                multi_plot=config.get("multi_plot"),
+                normalize=config.get("normalize"),
+                log_scale=config.get("log_scale"),
+            )
 
 
 @click.command()
@@ -80,6 +102,7 @@ def run_command(**kwargs):
     """
     try:
         config = _build_config(**kwargs)
+        print(config)
     except Exception as e:
         print(f"Configuration error: {e}")
         return

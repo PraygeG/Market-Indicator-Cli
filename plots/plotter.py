@@ -47,7 +47,6 @@ class Plotter:
         interval: str = None,
         start_date: str = None,
         end_date: str = None,
-        normalize: bool = False,
         interactive: bool = False,
     ):
         if column not in data.columns:
@@ -73,7 +72,7 @@ class Plotter:
         ax_obv: Axes = ax_map["obv"]
         ax_macd: Axes = ax_map["macd"]
         ax_rsi: Axes = ax_map["rsi"]
-        ax_adx: Axes = ax_map["adx"]
+        ax_adx: Axes = ["adx"]
 
         ax_price.plot(
             data.index,
@@ -135,7 +134,7 @@ class Plotter:
             )
         # Enable interactive plots
         if interactive:
-            enable_interactive(fig)
+            enable_interactive(fig, data)
             plt.draw()
             plt.gcf().canvas.mpl_connect("close_event", lambda evt: plt.close("all"))
             print("Interactive plot enabled. Close the plot window to continue.")

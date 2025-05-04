@@ -5,7 +5,10 @@ import pandas as pd
 import numpy as np
 from typing import Any, Dict, Optional, Sequence
 from matplotlib.widgets import Cursor, SpanSelector, RectangleSelector, TextBox, Button
+import matplotlib.dates as mdates
 import matplotlib as mpl
+import os
+from datetime import datetime
 
 COLOR_SCHEMES = {
     "default": {
@@ -272,7 +275,7 @@ def save_plot(
     return filepath
 
 
-def enable_interactive(fig: Figure, axes: Sequence[Axes], data: pd.DataFrame = None):
+def enable_interactive(fig: Figure, data: pd.DataFrame):
     """Enable interactive features for matplotlib"""
     try:
         import mplcursors
@@ -284,50 +287,97 @@ def enable_interactive(fig: Figure, axes: Sequence[Axes], data: pd.DataFrame = N
     else:
         has_mplcursors = True
 
-    fig._interactive_elements = {}
+    if not fig.get_axes():
+        print(
+            "Warning: No axes found in the figure. Cannot enable interactive features."
+        )
+        return
 
+    if not hasattr(fig, "_interactive_state"):
+        fig._interactive_state = {"widgets": {}, "initial_limits": {}}
+    # Get all axes from the figure
+    axes = fig.get_axes()
     for ax in axes:
-        cursor_obj = Cursor(ax, useblit=True, color="gray", linewidth=0.5)
-        fig._interactive_elements["cursor"] = cursor_obj
+        if ax not in fig._interactive_state["initial_limits"]:
+            fig._interactive_state["initial_limits"][ax] = {
+                "xlim": ax.get_xlim(),
+                "ylim": ax.get_ylim(),
+            }
+    cursor_obj = Cursor(axes[0], useblit=True, color="gray", linewidth=0.5)
+    fig._interactive_state["widgets"]["cursor"] = cursor_obj
 
     if has_mplcursors:
-        c = mplcursors.cursor(hover=True)
+        c = mplcursors.cursor(axes, hover=True, multiple=True)
 
         @c.connect("add")
         def on_add(sel):
+            ax: Axes = sel.artist.axes
             x, y = sel.target
             try:
-                if isinstance(data.index, pd.DatetimeIndex):
-                    date_str = pd.to_datetime(x).strftime("%Y-%m-%d")
-                    sel.annatation.set_text(f"Date: {date_str}\nValue: {y:.2f}")
+                is_date_axis = isinstance(
+                    ax.xaxis.get_major_formatter(), mdates.DateFormatter
+                ) or isinstance(ax.xaxis.get_major_locator(), mdates.DateLocator)
+
+                if is_date_axis:
+                    try:
+                        dt_obj: datetime = mdates.num2date(x)
+                        date_str = dt_obj.strftime("%Y-%m-%d %H:%M:%S")
+                        sel.annotation.set_text(f"X (num): {x:.2f}\nY: {y:.4f}")
+                    except (ValueError, TypeError) as e:
+                        print(f"Debug: Date conversion failed for x={x}. Error: {e}")
+                        sel.annotation.set_text(f"X (num): {x:.2f}\nY: {y:.4f}")
                 else:
+                    sel.annotation.set_text(f"X: {x:.4f}\nY: {y:.4f}")
+
+            except Exception as e:
+                print(f"Error in hover annotation callback: {e}")
+                try:
                     sel.annotation.set_text(f"X: {x:.2f}\nY: {y:.2f}")
-            except:
-                sel.annotation.set_text(f"X: {x:.2f}\nY: {y:.2f}")
+                except Exception:
+                    pass
 
-        fig._interactive_elements["tooltips"] = c
+            sel.annotation.get_bbox_patch().set(alpha=0.8, facecolor="white")
 
-    ax_price = axes[0]
+        fig._interactive_state["widgets"]["tooltips"] = c
+    else:
+        print(
+            "For full interactive hover features, please install mplcursors: python -m pip install mplcursors"
+        )
+
+    # Custom zoom
+
+    ax_main = axes[0]
 
     def on_select_zoom(eclick, erelease):
         x1, y1 = eclick.xdata, eclick.ydata
         x2, y2 = erelease.xdata, erelease.ydata
-        if abs(x2 - x1) > 10 and abs(y2 - y1) > 10:
-            for ax in axes:
-                curr_xlim = ax.get_xlim()
-                curr_ylim = ax.get_ylim()
 
-                if ax == ax_price:
-                    new_ylim = sorted([y1, y2])
-                else:
-                    new_ylim = curr_ylim
+        if x1 is None or x2 is None or y1 is None or y2 is None:
+            return
 
-                ax.set_xlim(sorted([x1, x2]))
+        # Check for minimal drag distance to avoid accidental zooms
+        min_pixel_dist = 5
+        if (
+            abs(eclick.x - erelease.x) < min_pixel_dist
+            or abs(eclick.y - erelease.y) < min_pixel_dist
+        ):
+            return
+
+        new_xlim = sorted([x1, x2])
+        new_ylim = sorted([y1, y2])
+
+        for ax in axes:
+            ax.set_xlim(new_xlim)
+
+            if ax == ax_main:
                 ax.set_ylim(new_ylim)
-            fig.canvas.draw_idle()
+            else:
+                pass
+
+        fig.canvas.draw_idle()
 
     rect_selector = RectangleSelector(
-        ax_price,
+        ax_main,
         on_select_zoom,
         useblit=True,
         button=[1],
@@ -335,109 +385,175 @@ def enable_interactive(fig: Figure, axes: Sequence[Axes], data: pd.DataFrame = N
         minspany=5,
         spancoords="pixels",
         interactive=True,
+        props=dict(facecolor="lightblue", edgecolor="blue", alpha=0.3, fill=True),
     )
-    fig._interactive_elements["rect_selector"] = rect_selector
+    fig._interactive_state["widgets"]["rect_selector"] = rect_selector
 
-    def reset_zoom(event):
-        for ax in axes:
-            ax.relim()
-            ax.autoscale()
+    # Reset Zoom Function
+    # Restores to the *initial* limits stored earlier
+    def reset_zoom(event=None):
+        initial_limits = fig._interactive_state.get("initial_limits", {})
+        if not initial_limits:
+            print("Warning: Initial limits not stored. Cannot reset precisely.")
+            for ax in axes:
+                ax.relim()
+                ax.autoscale()
+        else:
+            for ax in axes:
+                if ax in initial_limits:
+                    limits = initial_limits[ax]
+                    ax.set_xlim(limits["xlim"])
+                    ax.set_ylim(limits["ylim"])
+                else:
+                    ax.relim()
+                    ax.autoscale()
         fig.canvas.draw_idle()
 
-    reset_button_ax = fig.add_axes([0.85, 0.01, 0.1, 0.03])
-    reset_button = Button(reset_button_ax, "Reset Zoom")
-    reset_button.on_clicked(reset_zoom)
-    fig._interactive_elements["reset_button"] = reset_button
+    # Reset button
+    try:
+        reset_button_ax = fig.add_axes([0.88, 0.92, 0.1, 0.04])
+        reset_button = Button(reset_button_ax, "Reset View")
+        reset_button.on_clicked(reset_zoom)
+        fig._interactive_state["widgets"]["reset_button"] = reset_button
+    except ValueError as e:
+        print(f"Could not add reset button (overlapping axes?): {e}")
 
     def on_span_select(xmin, xmax):
-        print(f"Selected range: {xmin:.2f} to {xmax:.2f}")
+        if data is None:
+            print(
+                f"Selected X range: {xmin:.2f} to {xmax:.2f} (No data provided for analysis.)"
+            )
+            return
 
+        print(f"\nAnalyzing selected range: {xmin:.4f} to {xmax:.4f}")
         try:
             if isinstance(data.index, pd.DatetimeIndex):
-                xmin_idx = np.argmin(np.abs(np.array(data.index.astype(float)) - xmin))
-                xmax_idx = np.argmin(np.abs(np.array(data.index.astype(float)) - xmax))
-
-                date_range = data.iloc[xmin_idx : xmax_idx + 1]
-
-                if not date_range.empty:
+                if not data.index.is_monotonic_increasing:
                     print(
-                        f"Date range: {date_range.index[0].strftime("%Y-%m-%d")} to {date_range.index[-1].strftime("%Y-%m-%d")}"
+                        "Warning: DataFrame index is not sorted. Span analysis might be incorrect."
                     )
 
-                    price_col = date_range.columns[0]
+                try:
+                    pd_xmin = mdates.num2date(xmin)
+                    pd_xmax = mdates.num2date(xmax)
+                    start_idx = data.index.searchsorted(pd_xmin, side="left")
+                    end_idx = data.index.searchsorted(pd_xmax, side="right")
+                    selected_data = data.iloc[start_idx:end_idx]
+
+                except Exception as e_conv:
+                    print(
+                        f"Debug: Error converting span limits ({xmin}, {xmax}) or finding indices: {e_conv}"
+                    )
+                    numeric_index = data.index.astype(np.int64)
+                    print("Analysis failed due to date conversion issues.")
+                    return
+
+                if not selected_data.empty:
+                    price_col = None
+                    potential_cols = ["Close", "Adj Close", "Value", "Price"]
+                    for col in potential_cols:
+                        if col in selected_data.columns:
+                            price_col = col
+                            break
+                    if price_col is None:
+                        numeric_cols = selected_data.select_dtypes(
+                            include=np.number
+                        ).columns
+                        if not numeric_cols.empty:
+                            price_col = numeric_cols[0]
+                        else:
+                            print("No suitable numeric column found for analysis.")
+                            return
+
+                    first_date = selected_data.index[0]
+                    last_date = selected_data.index[-1]
+                    start_price = selected_data[price_col].iloc[0]
+                    end_price = selected_data[price_col].iloc[-1]
 
                     stats = {
-                        "Start": date_range.index[0].strftime("%Y-%m-%d"),
-                        "End": date_range.index[-1].strftime("%Y-%m-%d"),
-                        "Min": date_range[price_col].min(),
-                        "Max": date_range[price_col].max(),
-                        "Mean": date_range[price_col].mean(),
+                        "Start Date": first_date.strftime("%Y-%m-%d"),
+                        "End Date": last_date.strftime("%Y-%m-%d"),
+                        "Duration": (last_date - first_date),
+                        f"Min {price_col}": selected_data[price_col].min(),
+                        f"Max {price_col}": selected_data[price_col].max(),
+                        f"Mean {price_col}": selected_data[price_col].mean(),
+                        f"Start {price_col}": start_price,
+                        f"End {price_col}": end_price,
                         "% Change": (
-                            (
-                                date_range[price_col].iloc[-1]
-                                / date_range[price_col].iloc[0]
-                            )
-                            - 1
-                        )
-                        * 100,
+                            ((end_price / start_price) - 1) * 100
+                            if start_price != 0
+                            else float("inf")
+                        ),
+                        "Points": len(selected_data),
                     }
 
-                    print("\nSelected Range Statistics:")
+                    print("--- Selected Range Statistics ---")
                     for k, v in stats.items():
                         if isinstance(v, float):
-                            print(f"  {k}: {v:.2f}")
+                            print(f"   {k}: {v:.2f}")
                         else:
-                            print(f"  {k}: {v}")
+                            print(f"   {k}: {v}")
+                    print("---------------------------------")
                 else:
-                    print("No data points in selected range")
+                    print("No data points found in the selected range.")
+            else:
+                print("Span analysis currently requires a DatetimeIndex.")
+
         except Exception as e:
-            print(f"Error analyzing selection: {e}")
+            print(f"Error during span analysis: {e}")
+            import traceback
+
+            traceback.print_exc()
 
     span_selector = SpanSelector(
-        ax_price,
+        ax_main,
         on_span_select,
         "horizontal",
         useblit=True,
-        rectprops=dict(alpha=0.3, facecolor="lightblue"),
+        props=dict(alpha=0.3, facecolor="lightcoral"),
         button=[3],
+        interactive=True,
+        minspan=None,
     )
-    fig._interactive_elements["span_selector"] = span_selector
+    fig._interactive_state["widgets"]["span_selector"] = span_selector
 
     def on_key_press(event):
         if event.key == "r":
+            print("Reseting zoom (R key)")
             reset_zoom(event)
         elif event.key == "s":
-            import os
-            from datetime import datetime
-
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filepath = f"quick_save_{timestamp}.png"
-            fig.savefig(filepath, dpi=300, bbox_inches="tight")
-            print(f"Quick saved to: {os.path.abspath(filepath)}")
+            default_filename = f"plot_save_{timestamp}.png"
+            try:
+                filepath = default_filename
+                fig.savefig(filepath, dpi=150, bbox_inches="tight")
+                abs_path = os.path.abspath(filepath)
+                print(f"Plot saved to: {abs_path}")
+            except Exception as e_save:
+                print(f"Error saving plot: {e_save}")
 
-    fig.canvas.mpl_connect("key_press_event", on_key_press)
+    if not hasattr(fig.canvas, "_key_press_cid") or fig.canvas._key_press_cid is None:
+        fig.canvas._key_press_cid = fig.canvas.mpl_connect(
+            "key_press_event", on_key_press
+        )
 
-    instruction_text = """
-    Interactive controls:
-    • Click & drag left button: Zoom to rectangle
-    • Click & drag right button: Analyze time range
-    • Hover: Show data points
-    • 'r' key: Reset zoom
-    • 's' key: Quick save
-    """
-    fig.text(
-        0.01,
+    for txt in fig.texts:
+        if hasattr(txt, "_is_instruction_text"):
+            txt.remove()
+
+    instruction_text = """Interactive Controls:
+L-Drag: Zoom Box | R-Drag: Analyze Range | Hover: Data Value
+Keys: [R] Reset View | [S] Save PNG"""
+    instr_obj = fig.text(
+        0.02,
         0.01,
         instruction_text,
         fontsize=8,
         verticalalignment="bottom",
-        bbox=dict(boxtyle="round", facecolor="white", alpha=0.08),
+        wrap=True,
+        bbox=dict(boxstyle="round,pad=0.3", facecolor="lightgrey", alpha=0.6),
+        transform=fig.transFigure,
     )
+    instr_obj._is_instruction_text = True
 
-    print("Interactive mode enabled with the following features:")
-    print("- Hover over data points to see values")
-    print("- Left-click and drag to zoom into an area")
-    print("- Right-click and drag to analyze a time range")
-    print("- Press 'r' to reset zoom")
-    print("- Press 's' to quick save the current view")
-    print("- Click 'Reset Zoom' button to reset the view")
+    fig.canvas.draw_idle()

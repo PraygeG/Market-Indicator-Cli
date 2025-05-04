@@ -81,14 +81,25 @@ def plot_options(f):
         help="Custom color for down candles/bars (overrides color scheme)",
     )(f)
     f = click.option(
-        "--normalize",
-        is_flag=True,
-        help="Normalize the data for easier comparison between multiple tickers.",
-    )(f)
-    f = click.option(
         "--interactive",
         is_flag=True,
         help="Enable interactive plot.",
+    )(f)
+    return f
+
+
+def multi_plot_options(f):
+    f = click.option(
+        "--multi-plot",
+        "--multi",
+        is_flag=True,
+        help="Plot all the tickers on the same plot.",
+    )(f)
+    f = click.option(
+        "--normalize", is_flag=True, help="Normalize the data for multi plot."
+    )(f)
+    f = click.option(
+        "--log-scale", is_flag=True, help="Use logharithmic scale for multi plot."
     )(f)
     return f
 
@@ -120,5 +131,6 @@ def common_options(f):
     f = api_key_option(f)
     f = column_option(f)
     f = plot_options(f)
+    f = multi_plot_options(f)
     f = save_options(f)
     return f

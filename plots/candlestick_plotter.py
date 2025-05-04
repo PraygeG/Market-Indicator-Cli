@@ -122,6 +122,7 @@ class CandlestickPlotter:
         interval: str = None,
         start_date: str = None,
         end_date: str = None,
+        interactive: bool = False,
     ):
         required_columns = ["Open", "High", "Low", "Close"]
         if not all(col in data.columns for col in required_columns):
