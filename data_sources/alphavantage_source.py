@@ -119,8 +119,10 @@ class AlphavantageSource(BaseSource):
         df.sort_index(inplace=True)
 
         if start_date:
-            df = df[df.index <= start_date]
+            start_date = pd.to_datetime(start_date)
+            df = df[df.index >= start_date]
         if end_date:
+            end_date = pd.to_datetime(end_date)
             df = df[df.index <= end_date]
 
         return df

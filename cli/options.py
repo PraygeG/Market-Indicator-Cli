@@ -1,5 +1,13 @@
 import click
 
+def config_file_option(f):
+    return click.option(
+        "--config-file",
+        "--cfg",
+        type=click.Path(exists=True),
+        help="Path to a configuration file (YAML or JSON)"
+    )(f)
+
 
 def tickers_option(f):
     return click.option(
@@ -40,6 +48,8 @@ def indicator_option(f):
 def data_source_option(f):
     return click.option(
         "--data-source",
+        "--source",
+        type=click.Choice(["yfinance", "alphavantage"]),
         default="yfinance",
         help="Data source to use (default: yfinance)",
     )(f)
@@ -123,6 +133,7 @@ def save_options(f):
 
 
 def common_options(f):
+    f = config_file_option(f)
     f = tickers_option(f)
     f = date_range_options(f)
     f = interval_option(f)

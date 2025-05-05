@@ -32,11 +32,14 @@ def fetch_all_data(
     interval: str,
     source: str,
     delay=1,
+    api_key: str = None,
 ) -> dict[str, pd.DataFrame]:
     if source == "yfinance":
         src = YfinanceSource()
     elif source == "alphavantage":
-        src = AlphavantageSource()
+        src = AlphavantageSource(
+            api_key=api_key
+        )
     else:
         raise NotImplementedError("Only yfinance and alphavantage are supported")
     data_dict = {}

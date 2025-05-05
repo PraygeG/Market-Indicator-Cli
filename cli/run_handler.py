@@ -48,11 +48,12 @@ def _build_config(
 
 def _run_pipeline(config: dict[str, any]):
     all_data = fetch_all_data(
-        config["tickers"],
-        config["start_date"],
-        config["end_date"],
-        config["interval"],
-        config["data_source"],
+        tickers=config["tickers"],
+        start_date=config["start_date"],
+        end_date=config["end_date"],
+        interval=config["interval"],
+        source=config["data_source"],
+        api_key=config["api_key"],
     )
     if config["multi_plot"]:
         indicators = run_multi_ticker_indicators(
