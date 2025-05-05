@@ -211,20 +211,25 @@ def assign_axes(axes: Axes, indicators_info: dict) -> dict:
         current_index += 1
     else:
         ax_map["obv"] = None
+
     if indicators_info.get("has_macd"):
         ax_map["macd"] = axes[current_index]
         current_index += 1
     else:
         ax_map["macd"] = None
+
     if indicators_info.get("has_rsi"):
         ax_map["rsi"] = axes[current_index]
         current_index += 1
     else:
         ax_map["rsi"] = None
+
     if indicators_info.get("has_adx"):
         ax_map["adx"] = axes[current_index]
+        current_index += 1
     else:
         ax_map["adx"] = None
+
     return ax_map
 
 

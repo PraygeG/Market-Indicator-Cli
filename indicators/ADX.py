@@ -26,7 +26,7 @@ class ADX(BaseIndicator):
         """
         Calculates the ADX, +DI, and -DI values.
         """
-        print(self.window)
+        data = data.copy()
         required_columns: list[str] = ["High", "Low", "Close"]
         if not all(col in data.columns for col in required_columns):
             print(f"Error: Input DataFrame must contain {required_columns} columns.")

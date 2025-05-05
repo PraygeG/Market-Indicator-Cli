@@ -87,6 +87,7 @@ class Plotter:
                 or name.startswith("RSI")
                 or name.startswith("OBV")
                 or name.startswith("BBANDS")
+                or name.startswith("ADX")
             ):
                 continue
             ax_price.plot(series.index, series, label=f"{name}", linewidth=1)
@@ -115,10 +116,7 @@ class Plotter:
 
         if indicators_info["has_adx"]:
             adx_key = next(name for name in indicators if name.startswith("ADX"))
-
-            adx_data, params = indicators[adx_key]
-            print(type(adx_data))
-            print(adx_data, params)
+            adx_data, _ = indicators[adx_key]
             plot_adx(ax_adx, adx_data, self.scheme)
 
         plt.tight_layout(rect=[0, 0, 1, 0.96])
