@@ -72,7 +72,7 @@ class Plotter:
         ax_obv: Axes = ax_map["obv"]
         ax_macd: Axes = ax_map["macd"]
         ax_rsi: Axes = ax_map["rsi"]
-        ax_adx: Axes = ["adx"]
+        ax_adx: Axes = ax_map["adx"]
 
         ax_price.plot(
             data.index,
@@ -115,7 +115,10 @@ class Plotter:
 
         if indicators_info["has_adx"]:
             adx_key = next(name for name in indicators if name.startswith("ADX"))
+
             adx_data, params = indicators[adx_key]
+            print(type(adx_data))
+            print(adx_data, params)
             plot_adx(ax_adx, adx_data, self.scheme)
 
         plt.tight_layout(rect=[0, 0, 1, 0.96])

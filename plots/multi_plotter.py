@@ -1,6 +1,11 @@
 from typing import Dict, Tuple, Optional, Sequence
 import pandas as pd
 import matplotlib.pyplot as plt
+from plots.plot_methods import (
+    analyze_indicators,
+    assign_axes,
+    save_plot,
+)
 
 
 class MultiTickerPlotter:
@@ -25,6 +30,10 @@ class MultiTickerPlotter:
             Dict[str, Tuple[pd.Series | pd.DataFrame, Optional[list[int]]]]
         ] = None,
         column: str = "Close",
+        save: bool = False,
+        save_dir: str = None,
+        save_format: str = None,
+        save_dpi: int = 300,
         figsize: Tuple[int, int] = (12, 6),
     ) -> None:
         if not data:
@@ -47,6 +56,8 @@ class MultiTickerPlotter:
         ax_price.grid(True)
         ax_price.legend(loc="upper left")
         plt.tight_layout()
+        if save:
+            save_plot(fig_price, save_dir, save_format, save_dpi)
         plt.show()
 
         # Indicator plots
@@ -76,12 +87,23 @@ class MultiTickerPlotter:
                                 series = series / base_value
                     ax_ind.plot(ind_data.index, ind_data, linewidth=1)
 
-                ax_ind.set_title(f"{ind_name} Comparison{"(normalized)" if self.normalize else ""}")
-                ax_ind.set_ylabel(ind_name + (" (normalized)" if self.normalize else ""))
+                ax_ind.set_title(
+                    f"{ind_name} Comparison{"(normalized)" if self.normalize else ""}"
+                )
+                ax_ind.set_ylabel(
+                    ind_name + (" (normalized)" if self.normalize else "")
+                )
                 if self.log_scale:
                     ax_ind.set_yscale("log")
                 ax_ind.grid(True)
                 if len(data) > 1:
                     ax_ind.legend(loc="upper left")
+                if save:
+                    save_plot(
+                        fig_ind,
+                        save_dir,
+                        save_format,
+                        save_dpi,
+                    )
                 plt.tight_layout()
                 plt.show()

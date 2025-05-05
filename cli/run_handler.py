@@ -28,8 +28,9 @@ def _build_config(
 ):
     tickers = get_valid_tickers(tickers)
     start_date = get_valid_date(start_date, "Enter a valid start date (YYYY-MM-DD):\n")
-    end_date = get_valid_date(end_date, "Enter a valid end date (YYYY-MM-DD):\n")
-    validate_date_range(start_date, end_date)
+    validate_date_range(
+        start_date, get_valid_date(end_date, "Enter a valid end date (YYYY-MM-DD):\n")
+    )
     interval = get_valid_interval(interval)
     indicators = get_valid_indicators(indicators)
     config = {
@@ -63,6 +64,10 @@ def _run_pipeline(config: dict[str, any]):
             data=all_data,
             indicators=indicators,
             column=config["column"],
+            save=config["save"],
+            save_dir=config["save_dir"],
+            save_format=config["save_format"],
+            save_dpi=config["save_dpi"],
             normalize=config["normalize"],
             log_scale=config["log_scale"],
         )
@@ -87,10 +92,7 @@ def _run_pipeline(config: dict[str, any]):
                 interval=config["interval"],
                 start_date=config["start_date"],
                 end_date=config["end_date"],
-                interactive=config.get("interactive"),
-                multi_plot=config.get("multi_plot"),
-                normalize=config.get("normalize"),
-                log_scale=config.get("log_scale"),
+                interactive=config["interactive"],
             )
 
 

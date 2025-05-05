@@ -99,7 +99,7 @@ def run_indicators(
             calculated_series = indicator.calculate(data)
             calculated[name] = (calculated_series, params)
         elif name == "ADX":
-            indicator = indicator_class(name, params)
+            indicator = indicator_class(*params)
             calculated_series = indicator.calculate(data)
             calculated[f"{name}_{'_'.join(map(str, params))}"] = (
                 calculated_series,
@@ -131,10 +131,7 @@ def plot_data(
     interval: str = None,
     start_date: str = None,
     end_date: str = None,
-    interactive: bool = None,
-    multi_plot: bool = False,
-    normalize: bool = False,
-    log_scale: bool = False,
+    interactive: bool = False,
 ):
     title = f"Stock analysis for {ticker}"
     if plot_style == "candlestick":
@@ -171,6 +168,10 @@ def plot_multi(
     data: dict[str, pd.DataFrame],
     indicators: dict,
     column: str,
+    save: bool,
+    save_dir: str,
+    save_format: str,
+    save_dpi: int,
     normalize: bool,
     log_scale: bool,
 ) -> None:
@@ -182,4 +183,8 @@ def plot_multi(
         data,
         indicators,
         column,
+        save,
+        save_dir,
+        save_format,
+        save_dpi,
     )

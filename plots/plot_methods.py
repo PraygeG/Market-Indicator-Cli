@@ -154,9 +154,9 @@ def plot_obv(ax: Axes, obv_data: pd.Series, scheme: dict) -> None:
 
 
 def plot_adx(ax: Axes, adx_data: pd.DataFrame, scheme: dict) -> None:
-    adx_line = adx_data["ADX"]
-    positive_di_line = adx_data["plus_DI"]
-    negative_di_line = adx_data["minus_DI"]
+    adx_line = adx_data["adx"]
+    positive_di_line = adx_data["plus_di"]
+    negative_di_line = adx_data["minus_di"]
     ax.plot(
         adx_data.index,
         adx_line,
