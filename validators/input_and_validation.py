@@ -47,6 +47,8 @@ def prompt_until_valid(value, validator: callable, prompt_msg: str):
 
 
 def validate_tickers(tickers_str: str) -> list[str]:
+    import time
+
     if not tickers_str:
         raise ValidationError("No tickers provided.")
     tickers = [t.strip().upper() for t in tickers_str.split(",") if t.strip()]
@@ -56,12 +58,18 @@ def validate_tickers(tickers_str: str) -> list[str]:
     for ticker in tickers:
         try:
             info = yf.Ticker(ticker).info
+            time.sleep(0.5)
             if "regularMarketPrice" not in info or info["regularMarketPrice"] is None:
                 invalid.append(ticker)
         except Exception as e:
             error_msg = str(e).lower()
             if "404" in error_msg or "not found" in error_msg:
                 invalid.append(ticker)
+            if "Rate" in error_msg or "limited" in error_msg:
+                print(
+                    error_msg
+                    + "\nTry updating the yfinance package, it could be a bug that happens when the package is out of date."
+                )
             else:
                 print(f"[DEBUG] Unexpected error for '{ticker}: {e}")
                 invalid.append(ticker)

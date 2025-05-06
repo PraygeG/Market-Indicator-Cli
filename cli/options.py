@@ -1,11 +1,12 @@
 import click
 
+
 def config_file_option(f):
     return click.option(
         "--config-file",
         "--cfg",
         type=click.Path(exists=True),
-        help="Path to a configuration file (YAML or JSON)"
+        help="Path to a configuration file (YAML or JSON)",
     )(f)
 
 

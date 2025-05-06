@@ -183,14 +183,25 @@ def plot_adx(ax: Axes, adx_data: pd.DataFrame, scheme: dict) -> None:
     ax.grid(color=scheme.get("grid", None))
 
 
-def analyze_indicators(indicators: dict) -> dict:
+def analyze_indicators(indicators: dict, is_multi_ticker: bool = False) -> dict:
     """Analyze indicator presence and determine the number of subplots"""
     has_macd = any("MACD" in name for name in indicators)
     has_bbands = any("BBANDS" in name for name in indicators)
     has_rsi = any(name.startswith("RSI") for name in indicators)
     has_obv = any(name.startswith("OBV") for name in indicators)
     has_adx = any(name.startswith("ADX") for name in indicators)
-    subplot_count = 1 + has_macd + has_rsi + has_obv + has_adx
+    has_ema = any(name.startswith("EMA") for name in indicators)
+    has_sma = any(name.startswith("SMA") for name in indicators)
+    has_ma = has_ema or has_sma
+    
+    subplot_count = 0
+    subplot_count += 1
+
+    if has_ma and is_multi_ticker:
+        subplot_count += 1
+
+    subplot_count += sum([has_macd, has_rsi, has_obv, has_adx])
+
     return {
         "subplot_count": subplot_count,
         "has_bbands": has_bbands,
@@ -198,14 +209,26 @@ def analyze_indicators(indicators: dict) -> dict:
         "has_rsi": has_rsi,
         "has_obv": has_obv,
         "has_adx": has_adx,
+        "has_ema": has_ema,
+        "has_sma": has_sma,
+        "has_ma": has_ma,
     }
 
 
-def assign_axes(axes: Axes, indicators_info: dict) -> dict:
+def assign_axes(
+    axes: Axes, indicators_info: dict, is_multi_ticker: bool = False
+) -> dict[str, Axes]:
     """Assign axes to each indicator based on their presence."""
     ax_map = {}
     current_index = 1
     ax_map["price"] = axes[0]
+
+    if indicators_info.get("has_ma") and is_multi_ticker:
+        ax_map["ma"] = axes[current_index]
+        current_index += 1
+    else:
+        ax_map["ma"] = ax_map["price"]  # Use price chart for MAs in single ticker mode
+
     if indicators_info.get("has_obv"):
         ax_map["obv"] = axes[current_index]
         current_index += 1

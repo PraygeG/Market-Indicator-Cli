@@ -37,9 +37,7 @@ def fetch_all_data(
     if source == "yfinance":
         src = YfinanceSource()
     elif source == "alphavantage":
-        src = AlphavantageSource(
-            api_key=api_key
-        )
+        src = AlphavantageSource(api_key=api_key)
     else:
         raise NotImplementedError("Only yfinance and alphavantage are supported")
     data_dict = {}
@@ -81,9 +79,20 @@ def run_multi_ticker_indicators(
         else:
             result_df = pd.DataFrame()
             for ticker, data in ticker_data.items():
+                print(ticker)
                 indicator = indicator_class(*params, column=column)
                 series = indicator.calculate(data)
-                result_df[ticker] = series
+                print(f"{ticker=} {series.shape=} {series.isna().all().all()=}")
+                print(series.head(10))
+                if isinstance(series, pd.Series):
+                    result_df[ticker] = series
+                elif isinstance(series, pd.DataFrame):
+                    series = series.add_prefix(f"{ticker}_")
+                    result_df = pd.concat([result_df, series], axis=1)
+                else:
+                    raise TypeError(
+                        f"Unexpected output type from {name}: {type(series)}"
+                    )
             calculated[f"{name}_{"_".join(map(str, params))}"] = (result_df, params)
 
     return calculated
