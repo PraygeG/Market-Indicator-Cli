@@ -17,6 +17,7 @@ COLOR_SCHEMES = {
         "bg": "white",
         "text": "black",
         "grid": "#cccccc",
+        "fibs": ["#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3"],
     },
     "monochrome": {
         "up": "black",
@@ -24,6 +25,7 @@ COLOR_SCHEMES = {
         "bg": "white",
         "text": "black",
         "grid": "#cccccc",
+        "fibs": ["#666666"] * 5,
     },
     "tradingview": {
         "up": "#26a69a",
@@ -31,6 +33,7 @@ COLOR_SCHEMES = {
         "bg": "white",
         "text": "black",
         "grid": "#e0e3eb",
+        "fibs": ["#26a69a", "#a3d9ce", "#c6ece6", "#e8f6f5", "#ffffff"],
     },
     "dark": {
         "up": "#4CAF50",
@@ -38,6 +41,7 @@ COLOR_SCHEMES = {
         "bg": "#121212",
         "text": "white",
         "grid": "#333333",
+        "fibs": ["#90ee90", "#98fb98", "#adff2f", "#7cfc00", "#00fa9a"],
     },
 }
 
@@ -55,6 +59,107 @@ def apply_color_scheme(
         ax.yaxis.label.set_color(scheme["text"])
         ax.title.set_color(scheme["text"])
     fig.suptitle(title, color=scheme["text"])
+
+
+def _plot_lines(
+    ax: Axes,
+    data: pd.DataFrame,
+    scheme: Dict[str, str],
+    *,
+    key_order: list[str] = None,
+    ylabel: str = None,
+    title: str = None,
+    linewidth: float = 1.0,
+    linestyle: str = "--",
+    alpha: float = 0.8,
+) -> None:
+    cols = key_order or list(data.columns)
+
+    for col in cols:
+        color = scheme["up"]
+        ax.plot(
+            data.index,
+            data[col],
+            label=col,
+            color=color,
+            linewidth=linewidth,
+            linestyle=linestyle,
+            alpha=alpha,
+        )
+    ax.set_ylabel(ylabel)
+    if title:
+        ax.set_title(title)
+    ax.legend(loc="best")
+    ax.grid(color=scheme.get("grid", None), linestyle=":")
+
+def _plot_one_line(
+    ax: Axes,
+    x_data: pd.Index,
+    y_data: pd.Series,
+    label: str,
+    color: str,
+    *,
+    linewidth: float = 1.0,
+    linestyle: str = "--",
+    alpha: float = 0.8,
+) -> None:
+    ax.plot(
+        x_data,
+        y_data,
+        label=label,
+        color=color,
+        linewidth=linewidth,
+        linestyle=linestyle,
+        alpha=alpha,
+    )
+
+
+def plot_fibo(
+    ax: Axes,
+    fibo_data: pd.DataFrame,
+    scheme: dict[str, str],
+    *,
+    ylabel: str = "Price",
+    title: str = "Fibonacci Retracement Levels",
+    linewidth: float = 1.0,
+    linestyle: str = "--",
+    alpha: float = 1,
+) -> None:
+    levels = list(fibo_data.columns)
+    fib_colors = scheme.get("fibs", [])
+
+
+    if not levels:
+        ax.set_ylabel(ylabel)
+        if title:
+            ax.set_title(title)
+        ax.grid(color=scheme.get("grid", None), linestyle=":")
+        return
+    
+    if len(levels) > len(fib_colors):
+        raise ValueError(
+            f"Not enough fib colors provided. Data has {len(levels)} levels,"
+            f"but scheme['fibs'] only provides {len(fib_colors)} colors."
+        )
+    
+    for i, level_name in enumerate(levels):
+        color_for_this_level = fib_colors[i]
+        
+        _plot_one_line(
+            ax=ax,
+            x_data=fibo_data.index,
+            y_data=fibo_data[level_name],
+            label=level_name,
+            color=color_for_this_level,
+            linewidth=linewidth,
+            linestyle=linestyle,
+            alpha=alpha,
+        )
+    ax.set_ylabel(ylabel)
+    if title:
+        ax.set_title(title)
+    ax.legend(loc="best")
+    ax.grid(color=scheme.get("grid", "#D3D3D3"), linestyle=":")
 
 
 def plot_macd(ax: Axes, macd_data: pd.DataFrame, params: Any, scheme: dict) -> None:
@@ -187,13 +292,14 @@ def analyze_indicators(indicators: dict, is_multi_ticker: bool = False) -> dict:
     """Analyze indicator presence and determine the number of subplots"""
     has_macd = any("MACD" in name for name in indicators)
     has_bbands = any("BBANDS" in name for name in indicators)
+    has_fibo = any("FIBO" in name for name in indicators)
     has_rsi = any(name.startswith("RSI") for name in indicators)
     has_obv = any(name.startswith("OBV") for name in indicators)
     has_adx = any(name.startswith("ADX") for name in indicators)
     has_ema = any(name.startswith("EMA") for name in indicators)
     has_sma = any(name.startswith("SMA") for name in indicators)
     has_ma = has_ema or has_sma
-    
+
     subplot_count = 0
     subplot_count += 1
 
@@ -209,6 +315,7 @@ def analyze_indicators(indicators: dict, is_multi_ticker: bool = False) -> dict:
         "has_rsi": has_rsi,
         "has_obv": has_obv,
         "has_adx": has_adx,
+        "has_fibo": has_fibo,
         "has_ema": has_ema,
         "has_sma": has_sma,
         "has_ma": has_ma,
@@ -252,6 +359,7 @@ def assign_axes(
         current_index += 1
     else:
         ax_map["adx"] = None
+
 
     return ax_map
 

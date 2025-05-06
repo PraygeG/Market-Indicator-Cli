@@ -7,6 +7,7 @@ from indicators.BBANDS import BBANDS
 from indicators.MACD import MACD
 from indicators.OBV import OBV
 from indicators.ADX import ADX
+from indicators.fibonacci_retracement import FibonacciRetracement as FIBO
 from plots.plotter import Plotter
 from plots.candlestick_plotter import CandlestickPlotter
 from plots.multi_plotter import MultiTickerPlotter
@@ -22,6 +23,7 @@ INDICATOR_CLASSES = {
     "BBANDS": BBANDS,
     "OBV": OBV,
     "ADX": ADX,
+    "FIBO": FIBO,
 }
 
 
@@ -51,7 +53,7 @@ def fetch_all_data(
 
 def run_multi_ticker_indicators(
     ticker_data: dict[str, pd.DataFrame],
-    indicators: list[tuple[str, list[int]]],
+    indicators: list[tuple[str, list[int | float]]],
     column: str = "Close",
 ) -> dict[str, tuple[pd.DataFrame | pd.Series, Optional[list[int]]]]:
     calculated = {}
@@ -82,8 +84,6 @@ def run_multi_ticker_indicators(
                 print(ticker)
                 indicator = indicator_class(*params, column=column)
                 series = indicator.calculate(data)
-                print(f"{ticker=} {series.shape=} {series.isna().all().all()=}")
-                print(series.head(10))
                 if isinstance(series, pd.Series):
                     result_df[ticker] = series
                 elif isinstance(series, pd.DataFrame):
@@ -99,7 +99,7 @@ def run_multi_ticker_indicators(
 
 
 def run_indicators(
-    data: pd.DataFrame, indicators: list[tuple[str, list[int]]], column: str
+    data: pd.DataFrame, indicators: list[tuple[str, list[int | float]]], column: str
 ) -> dict[str, tuple[pd.DataFrame | pd.Series, Optional[list[int]]]]:
     calculated = {}
     for name, params in indicators:
@@ -110,7 +110,7 @@ def run_indicators(
             indicator = indicator_class(name)
             calculated_series = indicator.calculate(data)
             calculated[name] = (calculated_series, params)
-        elif name == "ADX":
+        elif name == "ADX" or name == "FIBO":
             indicator = indicator_class(*params)
             calculated_series = indicator.calculate(data)
             calculated[f"{name}_{'_'.join(map(str, params))}"] = (

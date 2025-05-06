@@ -25,6 +25,14 @@ valid_intervals = {
 }
 intraday_intervals = {"1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h"}
 
+
+def _is_positive_float(s: str) -> bool:
+    try:
+        return float(s) > 0
+    except ValueError:
+        return False
+
+
 supported_indicators = {
     "EMA": (1, lambda p: p.isdigit() and int(p) > 0),
     "SMA": (1, lambda p: p.isdigit() and int(p) > 0),
@@ -33,6 +41,7 @@ supported_indicators = {
     "BBANDS": (2, lambda p: p.isdigit() and int(p) > 0),
     "ADX": (1, lambda p: p.isdigit() and int(p) > 0),
     "OBV": (0, None),
+    "FIBO": (-1, _is_positive_float),
 }
 
 
@@ -126,42 +135,61 @@ def get_valid_interval(interval: str | None) -> str:
     )
 
 
-def parse_indicators(indicator_str: str) -> list[tuple[str, list[int]]]:
+def parse_indicators(indicator_str: str) -> list[tuple[str, list[int | float]]]:
     """Parse indicator string to list of (name, parameters) tuples."""
     if not indicator_str:
         return []
+
     result = []
     pairs = indicator_str.split(",")
     for pair in pairs:
         if ":" not in pair:
             name = pair.strip().upper()
-            params = []
+            params: list[float | int] = []
         else:
-            name, param = pair.split(":", 1)
+            name, raw = pair.split(":", 1)
             name = name.strip().upper()
-            if name in {"MACD", "BBANDS"} and "-" in param:
-                params = [int(p.strip()) for p in param.split("-")]
+            raw = raw.strip()
+
+            parts = raw.split("-")
+            if name == "FIBO":
+                params = [float(p.strip()) for p in parts]
             else:
-                params = [int(p.strip()) for p in param.split(",")]
+                params = [int(p.strip()) for p in parts]
+            # if name in {"MACD", "BBANDS"} and "-" in param:
+            #    params = [int(p.strip()) for p in param.split("-")]
+            # else:
+            #    params = [int(p.strip()) for p in param.split(",")]
         result.append((name, params))
     return result
 
 
-def validate_parsed_indicators(parsed_ind: list[tuple[str, list[int]]]):
+def validate_parsed_indicators(parsed_ind: list[tuple[str, list[int | float]]]):
     for name, params in parsed_ind:
         if name not in supported_indicators:
             raise ValidationError(f"Unsupported indicator: '{name}'")
         required_count, validator_fn = supported_indicators[name]
+
         if required_count == 0:
             if params:
                 raise ValidationError(
                     f"'{name}' does not require any parameters, but got '{params}'"
                 )
             continue
-        if len(params) != required_count:
-            raise ValidationError(
-                f"'{name}' requires {required_count} parameter(s), got {len(params)}."
-            )
+
+        if required_count < 0:
+            min_req = abs(required_count)
+            if len(params) < min_req:
+                raise ValidationError(
+                    f"'{name}' requires {required_count} parameter(s), got {len(params)}."
+                )
+            
+        else:
+            if len(params) != required_count:
+                raise ValidationError(
+                    f"'{name}' requires {required_count} parameter(s), got {len(params)}."
+                )
+            
         if validator_fn and not all(validator_fn(str(p)) for p in params):
             raise ValidationError(f"Invalid parameters for '{name}': '{params}'")
 

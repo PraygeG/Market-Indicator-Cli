@@ -12,6 +12,7 @@ from plots.plot_methods import (
     plot_rsi,
     plot_obv,
     plot_adx,
+    plot_fibo,
     analyze_indicators,
     assign_axes,
     save_plot,
@@ -88,6 +89,7 @@ class Plotter:
                 or name.startswith("OBV")
                 or name.startswith("BBANDS")
                 or name.startswith("ADX")
+                or name.startswith("FIBO")
             ):
                 continue
             ax_price.plot(series.index, series, label=f"{name}", linewidth=1)
@@ -95,6 +97,10 @@ class Plotter:
             bbands_key = next(name for name in indicators if "BBANDS" in name)
             bbands_data, params = indicators[bbands_key]
             plot_bbands(ax_price, bbands_data, params, self.scheme)
+        if indicators_info["has_fibo"]:
+            fibo_key = next(name for name in indicators if name.startswith("FIBO"))
+            fibo_data, _ = indicators[fibo_key]
+            plot_fibo(ax_price, fibo_data, self.scheme)
         ax_price.set_label("Price")
         ax_price.legend()
         ax_price.grid(color=self.scheme.get("grid", None))
@@ -118,6 +124,7 @@ class Plotter:
             adx_key = next(name for name in indicators if name.startswith("ADX"))
             adx_data, _ = indicators[adx_key]
             plot_adx(ax_adx, adx_data, self.scheme)
+
 
         plt.tight_layout(rect=[0, 0, 1, 0.96])
 

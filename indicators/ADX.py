@@ -12,7 +12,7 @@ class ADX(BaseIndicator):
         self,
         window: int = 14,
     ):
-        super().__init__(column="Close")
+        super().__init__(column=None)
         if not isinstance(window, int) or window <= 1:
             raise ValueError("Window must be an integer greater than 1.")
         self.window: int = window
@@ -29,8 +29,7 @@ class ADX(BaseIndicator):
         data = data.copy()
         required_columns: list[str] = ["High", "Low", "Close"]
         if not all(col in data.columns for col in required_columns):
-            print(f"Error: Input DataFrame must contain {required_columns} columns.")
-            return pd.DataFrame(index=data.index)
+            raise ValueError(f"DataFrame is missing columns for adx calculation.")
 
         high: pd.Series = data["High"]
         low: pd.Series = data["Low"]

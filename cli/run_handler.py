@@ -21,7 +21,7 @@ def _build_config(
     start_date: str = None,
     end_date: str = None,
     interval: str = None,
-    indicators: list[tuple[str, list[int]]] = None,
+    indicators: list[tuple[str, list[int | float]]] = None,
     data_source: str = "yfinance",
     column: str = "Close",
     **kwargs,
