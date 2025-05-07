@@ -1,13 +1,5 @@
 __pycache__/
-plotly.py/
 .vscode/
-input_validators.py/
-RunFromScript.py/
-main.py/
-cli_main.py/
 Pipfile/
 Pipfile.lock/
-requirements.txt/
-tests/
-.idea/
 .pylintrc/
