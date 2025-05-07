@@ -5,8 +5,6 @@ import yfinance as yf
 class ValidationError(Exception):
     """Validation error exception"""
 
-    pass
-
 
 valid_intervals = {
     "1m",
@@ -104,7 +102,7 @@ def validate_date(date: str) -> str:
             raise ValidationError("The year cannot be greater than the current year.")
         return date
     except ValueError:
-        raise ValidationError(f"Invalid date format. Please use YYYY-MM-DD")
+        raise ValidationError("Invalid date format. Please use YYYY-MM-DD")
 
 
 def get_valid_date(date: str | None, message: str) -> str:
@@ -183,13 +181,13 @@ def validate_parsed_indicators(parsed_ind: list[tuple[str, list[int | float]]]):
                 raise ValidationError(
                     f"'{name}' requires {required_count} parameter(s), got {len(params)}."
                 )
-            
+
         else:
             if len(params) != required_count:
                 raise ValidationError(
                     f"'{name}' requires {required_count} parameter(s), got {len(params)}."
                 )
-            
+
         if validator_fn and not all(validator_fn(str(p)) for p in params):
             raise ValidationError(f"Invalid parameters for '{name}': '{params}'")
 

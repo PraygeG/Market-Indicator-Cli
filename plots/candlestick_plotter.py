@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import matplotlib.dates as mdates
 from matplotlib.patches import Rectangle
-from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 from plots.plot_methods import (
     COLOR_SCHEMES,
@@ -113,7 +112,7 @@ class CandlestickPlotter:
         self,
         data: pd.DataFrame,
         indicators: dict,
-        column: str = "Close",
+        column: str = "Close",  # do usunięcia
         ticker: str = "Unknown",
         save: bool = False,
         save_dir: str = None,

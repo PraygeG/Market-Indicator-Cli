@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 import pandas as pd
-import numpy as np
 from plots.plot_methods import (
     COLOR_SCHEMES,
     apply_color_scheme,
@@ -124,7 +123,6 @@ class Plotter:
             adx_key = next(name for name in indicators if name.startswith("ADX"))
             adx_data, _ = indicators[adx_key]
             plot_adx(ax_adx, adx_data, self.scheme)
-
 
         plt.tight_layout(rect=[0, 0, 1, 0.96])
 

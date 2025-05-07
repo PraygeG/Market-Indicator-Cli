@@ -92,6 +92,7 @@ def _plot_lines(
     ax.legend(loc="best")
     ax.grid(color=scheme.get("grid", None), linestyle=":")
 
+
 def _plot_one_line(
     ax: Axes,
     x_data: pd.Index,
@@ -128,23 +129,22 @@ def plot_fibo(
     levels = list(fibo_data.columns)
     fib_colors = scheme.get("fibs", [])
 
-
     if not levels:
         ax.set_ylabel(ylabel)
         if title:
             ax.set_title(title)
         ax.grid(color=scheme.get("grid", None), linestyle=":")
         return
-    
+
     if len(levels) > len(fib_colors):
         raise ValueError(
             f"Not enough fib colors provided. Data has {len(levels)} levels,"
             f"but scheme['fibs'] only provides {len(fib_colors)} colors."
         )
-    
+
     for i, level_name in enumerate(levels):
         color_for_this_level = fib_colors[i]
-        
+
         _plot_one_line(
             ax=ax,
             x_data=fibo_data.index,
@@ -359,7 +359,6 @@ def assign_axes(
         current_index += 1
     else:
         ax_map["adx"] = None
-
 
     return ax_map
 

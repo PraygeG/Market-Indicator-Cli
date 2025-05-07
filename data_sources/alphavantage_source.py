@@ -1,6 +1,7 @@
-from data_sources.base_source import BaseSource
+import os
 import requests
 import pandas as pd
+from data_sources.base_source import BaseSource
 
 
 class AlphavantageSource(BaseSource):
@@ -16,7 +17,6 @@ class AlphavantageSource(BaseSource):
         """
         self.api_key = api_key
         if not self.api_key:
-            import os
 
             self.api_key = os.environ.get("ALPHA_VANTAGE_API_KEY")
             if not self.api_key:
@@ -51,7 +51,7 @@ class AlphavantageSource(BaseSource):
         av_interval = self._map_interval(interval)
 
         if av_interval in ["1min", "5min", "15min", "30min", "60min"]:
-            function = f"TIME_SERIES_INTRADAY"
+            function = "TIME_SERIES_INTRADAY"
             params = {
                 "function": function,
                 "symbol": ticker,
@@ -75,7 +75,7 @@ class AlphavantageSource(BaseSource):
             }
             time_series_key = f"Time Series ({function.split('_')[-1].capitalize()})"
 
-        response = requests.get(self.BASE_URL, params=params)
+        response = requests.get(self.BASE_URL, params=params, timeout=(5, 20))
         if response.status_code != 200:
             raise Exception(
                 f"API request failed with status code {response.status_code}: {response.text}"

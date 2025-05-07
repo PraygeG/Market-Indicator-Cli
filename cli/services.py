@@ -1,3 +1,6 @@
+from typing import Optional
+import time
+import pandas as pd
 from data_sources.yfinance_source import YfinanceSource
 from data_sources.alphavantage_source import AlphavantageSource
 from indicators.EMA import EMA
@@ -11,9 +14,6 @@ from indicators.fibonacci_retracement import FibonacciRetracement as FIBO
 from plots.plotter import Plotter
 from plots.candlestick_plotter import CandlestickPlotter
 from plots.multi_plotter import MultiTickerPlotter
-from typing import Optional
-import pandas as pd
-import time
 
 INDICATOR_CLASSES = {
     "EMA": EMA,
@@ -110,7 +110,7 @@ def run_indicators(
             indicator = indicator_class(name)
             calculated_series = indicator.calculate(data)
             calculated[name] = (calculated_series, params)
-        elif name == "ADX" or name == "FIBO":
+        elif name in ("ADX", "FIBO"):
             indicator = indicator_class(*params)
             calculated_series = indicator.calculate(data)
             calculated[f"{name}_{'_'.join(map(str, params))}"] = (
