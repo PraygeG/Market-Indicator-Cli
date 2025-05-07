@@ -3,3 +3,7 @@ __pycache__/
 Pipfile/
 Pipfile.lock/
 .pylintrc/
+config.yaml/
+main2.py/
+run_handlerv2.py/
+config_model.py/
