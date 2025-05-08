@@ -82,6 +82,7 @@ def validate_tickers(tickers_str: str) -> list[str]:
 
     if not tickers_str:
         raise ValidationError("No tickers provided.")
+
     tickers = [t.strip().upper() for t in tickers_str.split(",") if t.strip()]
     if not tickers:
         raise ValidationError("No tickers provided.")
@@ -89,7 +90,7 @@ def validate_tickers(tickers_str: str) -> list[str]:
     for ticker in tickers:
         try:
             info = yf.Ticker(ticker).info
-            time.sleep(0.5)
+            time.sleep(0.1)
             if "regularMarketPrice" not in info or info["regularMarketPrice"] is None:
                 invalid.append(ticker)
         except Exception as e:
@@ -106,6 +107,7 @@ def validate_tickers(tickers_str: str) -> list[str]:
                 invalid.append(ticker)
     if invalid:
         raise ValidationError(f"Invalid or inactive tickers: {', '.join(invalid)}")
+    
     return tickers
 
 

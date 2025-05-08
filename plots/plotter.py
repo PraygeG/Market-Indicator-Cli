@@ -147,4 +147,3 @@ class Plotter:
             plt.gcf().canvas.mpl_connect("close_event", lambda evt: plt.close("all"))
             print("Interactive plot enabled. Close the plot window to continue.")
             plt.show(block=True)
-

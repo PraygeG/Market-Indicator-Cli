@@ -1,11 +1,19 @@
 # Data Acquisition Settings
-tickers: "AAPL,MSFT, NVDA, TSLA, AMZN, GOOGL, META, MCD, UBER, AMD, INTC, TSM" # Comma-separated list of tickers
+# Comma-separated list of tickers to fetch (string)
+# Provide as a single quoted string, separated by commas
+# e.g., "AAPL,MSFT,GOOGL"
+tickers: "AAPL,MSFT,NVDA,TSLA, AMZN, GOOGL, META, MCD, UBER, AMD, INTC, TSM" # Comma-separated list of tickers
+# Date range for the data (YYYY-MM-DD)
 start_date: "2024-01-01"   # Start date (YYYY-MM-DD)
 end_date: "2025-01-01"     # End date (YYYY-MM-DD)
+# Data interval
+# Valid: 1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo
 interval: "1d"             # Data interval (e.g., 1m, 5m, 1h, 1d, 1wk)
+# Data source settings
 data_source: "yfinance"    # yfinance or alphavantage
-#api_key: "YOUR_ALPHAVANTAGE_API_KEY" # Only needed if data_source is alphavantage
-column: "Close"            # Column to use for calculations
+api_key: "" # Only needed if data_source is alphavantage
+# Column to use for calculations (for SMA and EMA)
+column: "Close"
 
 # Indicator Settings
 # Comma-separated list: INDICATOR_NAME:param1-param2,OTHER_INDICATOR:param
@@ -25,7 +33,7 @@ normalize: false           # Normalize data for multi-plot
 log_scale: false           # Use logarithmic scale for multi-plot
 
 # Saving Options
-save: True                 # Save the plot(s) to file automatically
-save_dir: "./plots_output" # Directory to save plots
-save_format: "png"         # Format: png, pdf, svg, jpg
-save_dpi: 300              # DPI for raster formats (png, jpg)
+#save: True                 # Save the plot(s) to file automatically
+#save_dir: "./plots_output" # Directory to save plots
+#save_format: "png"         # Format: png, pdf, svg, jpg
+#save_dpi: 300              # DPI for raster formats (png, jpg)

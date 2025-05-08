@@ -383,7 +383,7 @@ def save_plot(
         if isinstance(d, (date, datetime)):
             return d.strftime("%Y%m%d")
         return d.replace("-", "")
-    
+
     start_str = _fmt(start_date)
     end_str = _fmt(end_date)
 
@@ -403,9 +403,9 @@ def save_plot(
         components.append(start_str)
     if end_str:
         components.append(end_str)
-    #if start_date:
+    # if start_date:
     #    components.append(start_date.replace("-", ""))
-    #if end_date:
+    # if end_date:
     #    components.append(end_date.replace("-", ""))
     if not components:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
