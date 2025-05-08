@@ -3,12 +3,12 @@ import time
 import pandas as pd
 from data_sources.yfinance_source import YfinanceSource
 from data_sources.alphavantage_source import AlphavantageSource
-from indicators.EMA import EMA
-from indicators.SMA import SMA
-from indicators.RSI import RSI
-from indicators.BBANDS import BBANDS
-from indicators.MACD import MACD
-from indicators.OBV import OBV
+from indicators.ema import EMA
+from indicators.sma import SMA
+from indicators.rsi import RSI
+from indicators.bbands import BBANDS
+from indicators.macd import MACD
+from indicators.obv import OBV
 from indicators.adx import ADX
 from indicators.fibonacci_retracement import FibonacciRetracement as FIBO
 from plots.plotter import Plotter
