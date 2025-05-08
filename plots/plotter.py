@@ -138,6 +138,8 @@ class Plotter:
                 start_date,
                 end_date,
             )
+        else:
+            plt.show()
         # Enable interactive plots
         if interactive:
             enable_interactive(fig, data)
@@ -145,5 +147,4 @@ class Plotter:
             plt.gcf().canvas.mpl_connect("close_event", lambda evt: plt.close("all"))
             print("Interactive plot enabled. Close the plot window to continue.")
             plt.show(block=True)
-        else:
-            plt.show()
+

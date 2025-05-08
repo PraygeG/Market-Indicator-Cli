@@ -9,7 +9,7 @@ from indicators.RSI import RSI
 from indicators.BBANDS import BBANDS
 from indicators.MACD import MACD
 from indicators.OBV import OBV
-from indicators.ADX import ADX
+from indicators.adx import ADX
 from indicators.fibonacci_retracement import FibonacciRetracement as FIBO
 from plots.plotter import Plotter
 from plots.candlestick_plotter import CandlestickPlotter

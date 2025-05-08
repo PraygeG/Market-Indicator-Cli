@@ -377,7 +377,15 @@ def save_plot(
     Save the plot to a file.
     """
     import os
-    from datetime import datetime
+    from datetime import datetime, date
+
+    def _fmt(d):
+        if isinstance(d, (date, datetime)):
+            return d.strftime("%Y%m%d")
+        return d.replace("-", "")
+    
+    start_str = _fmt(start_date)
+    end_str = _fmt(end_date)
 
     format = save_format.lower()
     valid_formats = ["png", "pdf", "svg", "jpg", "jpeg"]
@@ -391,10 +399,14 @@ def save_plot(
         components.append(ticker)
     if interval:
         components.append(interval)
-    if start_date:
-        components.append(start_date.replace("-", ""))
-    if end_date:
-        components.append(end_date.replace("-", ""))
+    if start_str:
+        components.append(start_str)
+    if end_str:
+        components.append(end_str)
+    #if start_date:
+    #    components.append(start_date.replace("-", ""))
+    #if end_date:
+    #    components.append(end_date.replace("-", ""))
     if not components:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         components.append(f"plot_{timestamp}")

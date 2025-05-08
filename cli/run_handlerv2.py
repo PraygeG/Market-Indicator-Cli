@@ -1,7 +1,9 @@
 import os
-from typing import Optional, Any
+from typing import Optional, Any, Dict
 import yaml
 import click
+import sys
+from cli.config_model import ConfigModel, ValidationError
 from cli.options import common_options
 from cli.services import (
     fetch_all_data,
@@ -51,34 +53,14 @@ def load_config(config_file_path: Optional[str]) -> dict[str, Any]:
         raise ConfigError(f"Could not load configuration file {config_file_path}: {e}")
 
 
-def _build_config(
-    tickers: list[str] = None,
-    start_date: str = None,
-    end_date: str = None,
-    interval: str = None,
-    indicators: list[tuple[str, list[int | float]]] = None,
-    data_source: str = "yfinance",
-    column: str = "Close",
-    **kwargs,
-):
-    tickers = get_valid_tickers(tickers)
-    start_date = get_valid_date(start_date, "Enter a valid start date (YYYY-MM-DD):\n")
-    validate_date_range(
-        start_date, get_valid_date(end_date, "Enter a valid end date (YYYY-MM-DD):\n")
-    )
-    interval = get_valid_interval(interval)
-    indicators = get_valid_indicators(indicators)
-    config = {
-        "tickers": tickers,
-        "start_date": start_date,
-        "end_date": end_date,
-        "interval": interval,
-        "indicators": indicators,
-        "data_source": data_source or "yfinance",
-        "column": column or "Close",
-    }
-    config.update(kwargs)
-    return config
+def _build_config(config_file: str, **cli_overrides) -> Dict[str, Any]:
+    raw = load_config(config_file)
+
+    merged = {**raw, **cli_overrides}
+    cfg = ConfigModel.model_validate(merged)
+    result = cfg.model_dump()
+    result["indicators"] = cfg.tuples()
+    return result
 
 
 def _run_pipeline(config: dict[str, any]):
@@ -134,14 +116,66 @@ def _run_pipeline(config: dict[str, any]):
 
 @click.command()
 @common_options
+@click.option(
+    "--config-file",
+    "-c",
+    type=click.Path(exists=True),
+    help="Path to YAML configuration file",
+)
 def run_command(**kwargs):
     """
     Main entrypoint.
     """
-    try:
-        config = _build_config(**kwargs)
-        print(config)
-    except Exception as e:
-        print(f"Configuration error: {e}")
-        return
+    config_file = kwargs.get("config_file")
+    if not config_file:
+        tickers = kwargs.get("tickers") or get_valid_tickers(None)
+        start = get_valid_date(
+            kwargs.get("start_date"), "Enter start date (YYYY-MM-DD):\n"
+        )
+        end = get_valid_date(kwargs.get("end_date"), "Enter end date (YYYY-MM-DD):\n")
+        interval = kwargs.get("interval") or get_valid_interval(None)
+        indicators = kwargs.get("indicators") or get_valid_indicators(None)
+        config = {
+            "tickers": tickers,
+            "start_date": start,
+            "end_date": end,
+            "interval": interval,
+            "indicators": indicators,
+            "data_source": kwargs.get("data_source"),
+            "api_key": kwargs.get("api_key"),
+            "column": kwargs.get("column"),
+            "plot_style": kwargs.get("plot_style"),
+            "color_scheme": kwargs.get("color_scheme"),
+            "up_color": kwargs.get("up_color"),
+            "down_color": kwargs.get("down_color"),
+            "interactive": kwargs.get("interactive"),
+            "multi_plot": kwargs.get("multi_plot"),
+            "normalize": kwargs.get("normalize"),
+            "log_scale": kwargs.get("log_scale"),
+            "save": kwargs.get("save"),
+            "save_dir": kwargs.get("save_dir"),
+            "save_format": kwargs.get("save_format"),
+            "save_dpi": kwargs.get("save_dpi"),
+        }
+    else:
+        argv = sys.argv[1:]
+        ctx = click.get_current_context()
+        provided = set()
+        for param in ctx.command.params:
+            for opt in param.opts:
+                for arg in argv:
+                    if arg == opt or arg.startswith(opt + "="):
+                        provided.add(param.name)
+        
+        cli_overrides = {
+            name: kwargs[name] for name in provided if name != "config_file"
+        }
+        try:
+            config = _build_config(config_file=config_file, **cli_overrides)
+            print(config)
+        except ConfigError as e:
+            click.echo(f"Configuration validation error:\n{e}", err=True)
+            raise click.Abort()
+
+
     _run_pipeline(config)

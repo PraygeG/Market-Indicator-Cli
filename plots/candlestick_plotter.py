@@ -11,6 +11,7 @@ from plots.plot_methods import (
     plot_rsi,
     plot_obv,
     plot_adx,
+    plot_fibo,
     analyze_indicators,
     assign_axes,
     save_plot,
@@ -159,6 +160,7 @@ class CandlestickPlotter:
                 or name.startswith("BBANDS")
                 or name.startswith("RSI")
                 or name.startswith("OBV")
+                or name.startswith("FIBO")
             ):
                 continue
             ax_price.plot(series.index, series, label=f"{name} {params}", linewidth=1.5)
@@ -166,6 +168,10 @@ class CandlestickPlotter:
             bbands_key = next(name for name in indicators if "BBANDS" in name)
             bbands_data, params = indicators[bbands_key]
             plot_bbands(ax_price, bbands_data, params, self.scheme)
+        if indicators_info["has_fibo"]:
+            fibo_key = next(name for name in indicators if name.startswith("FIBO"))
+            fibo_data, _ = indicators[fibo_key]
+            plot_fibo(ax_price, fibo_data, self.scheme)
         ax_price.set_ylabel("Price")
         ax_price.legend()
         ax_price.grid(color=self.scheme.get("grid", None))
@@ -207,4 +213,5 @@ class CandlestickPlotter:
                 start_date,
                 end_date,
             )
-        plt.show()
+        else:
+            plt.show()

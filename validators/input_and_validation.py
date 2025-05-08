@@ -32,12 +32,36 @@ def _is_positive_float(s: str) -> bool:
 
 
 supported_indicators = {
-    "EMA": (1, lambda p: p.isdigit() and int(p) > 0),
-    "SMA": (1, lambda p: p.isdigit() and int(p) > 0),
-    "RSI": (1, lambda p: p.isdigit() and int(p) > 0),
-    "MACD": (3, lambda p: p.isdigit() and int(p) > 0),
-    "BBANDS": (2, lambda p: p.isdigit() and int(p) > 0),
-    "ADX": (1, lambda p: p.isdigit() and int(p) > 0),
+    "EMA": (
+        1,
+        lambda p: (isinstance(p, str) and p.isdigit() and int(p) > 0)
+        or (isinstance(p, (int, float)) and p > 0),
+    ),
+    "SMA": (
+        1,
+        lambda p: (isinstance(p, str) and p.isdigit() and int(p) > 0)
+        or (isinstance(p, (int, float)) and p > 0),
+    ),
+    "RSI": (
+        1,
+        lambda p: (isinstance(p, str) and p.isdigit() and int(p) > 0)
+        or (isinstance(p, (int, float)) and p > 0),
+    ),
+    "MACD": (
+        3,
+        lambda p: (isinstance(p, str) and p.isdigit() and int(p) > 0)
+        or (isinstance(p, (int, float)) and p > 0),
+    ),
+    "BBANDS": (
+        2,
+        lambda p: (isinstance(p, str) and p.isdigit() and int(p) > 0)
+        or (isinstance(p, (int, float)) and p > 0),
+    ),
+    "ADX": (
+        1,
+        lambda p: (isinstance(p, str) and p.isdigit() and int(p) > 0)
+        or (isinstance(p, (int, float)) and p > 0),
+    ),
     "OBV": (0, None),
     "FIBO": (-1, _is_positive_float),
 }
@@ -188,7 +212,8 @@ def validate_parsed_indicators(parsed_ind: list[tuple[str, list[int | float]]]):
                     f"'{name}' requires {required_count} parameter(s), got {len(params)}."
                 )
 
-        if validator_fn and not all(validator_fn(str(p)) for p in params):
+        # if validator_fn and not all(validator_fn(str(p)) for p in params):
+        if validator_fn and not all(validator_fn(p) for p in params):
             raise ValidationError(f"Invalid parameters for '{name}': '{params}'")
 
 

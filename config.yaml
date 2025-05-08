@@ -1,0 +1,31 @@
+# Data Acquisition Settings
+tickers: "AAPL,MSFT, NVDA, TSLA, AMZN, GOOGL, META, MCD, UBER, AMD, INTC, TSM" # Comma-separated list of tickers
+start_date: "2024-01-01"   # Start date (YYYY-MM-DD)
+end_date: "2025-01-01"     # End date (YYYY-MM-DD)
+interval: "1d"             # Data interval (e.g., 1m, 5m, 1h, 1d, 1wk)
+data_source: "yfinance"    # yfinance or alphavantage
+#api_key: "YOUR_ALPHAVANTAGE_API_KEY" # Only needed if data_source is alphavantage
+column: "Close"            # Column to use for calculations
+
+# Indicator Settings
+# Comma-separated list: INDICATOR_NAME:param1-param2,OTHER_INDICATOR:param
+# Example: "RSI:14,EMA:50,SMA:100,MACD:12-26-9,BBANDS:20-2,FIBO:0.236-0.382-0.5-0.618"
+indicators: "EMA:20,RSI:14,MACD:12-26-9,FIBO:0.236-0.382-0.5-0.618"
+
+# Plotting Options
+plot_style: "candlestick" # line or candlestick
+color_scheme: "tradingview" # default, monochrome, tradingview, dark
+# up_color: "green"         # Optional: Custom up color
+# down_color: "red"         # Optional: Custom down color
+#interactive: true           # Enable interactive plot
+
+# Multi-Plot Options (if applicable)
+multi_plot: false          # Plot all tickers on the same plot
+normalize: false           # Normalize data for multi-plot
+log_scale: false           # Use logarithmic scale for multi-plot
+
+# Saving Options
+save: True                 # Save the plot(s) to file automatically
+save_dir: "./plots_output" # Directory to save plots
+save_format: "png"         # Format: png, pdf, svg, jpg
+save_dpi: 300              # DPI for raster formats (png, jpg)
