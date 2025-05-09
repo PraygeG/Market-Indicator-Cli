@@ -4,6 +4,4 @@ Pipfile/
 Pipfile.lock/
 .pylintrc/
 config.yaml/
-main2.py/
-cli/run_handlerv2.py/
-cli/config_model.py/
+tests/

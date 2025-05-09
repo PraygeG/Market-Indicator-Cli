@@ -107,7 +107,7 @@ def validate_tickers(tickers_str: str) -> list[str]:
                 invalid.append(ticker)
     if invalid:
         raise ValidationError(f"Invalid or inactive tickers: {', '.join(invalid)}")
-    
+
     return tickers
 
 

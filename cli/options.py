@@ -1,5 +1,7 @@
 import click
 
+"""Module for click options and wrapper."""
+
 
 def tickers_option(f):
     return click.option(
@@ -11,6 +13,7 @@ def tickers_option(f):
 
 
 def date_range_options(f):
+    """Date range options."""
     f = click.option(
         "--start-date", "--start", default=None, help="Start date (YYYY-MM-DD)"
     )(f)
@@ -60,6 +63,7 @@ def column_option(f):
 
 
 def plot_options(f):
+    """Plot style and color scheme options."""
     f = click.option(
         "--plot-style",
         default="line",
@@ -91,6 +95,10 @@ def plot_options(f):
 
 
 def multi_plot_options(f):
+    """
+    Enable plotting multiple tickers on the same chart,
+    plus normalization and log scale optionally for better readiness
+    """
     f = click.option(
         "--multi-plot",
         "--multi",
@@ -107,6 +115,10 @@ def multi_plot_options(f):
 
 
 def save_options(f):
+    """
+    Save plots in a given directory, format and dpi for raster formats
+    instead of showing, good for running plots at scale.
+    """
     f = click.option(
         "--save", is_flag=True, help="Save the plot(s) to file automatically. "
     )(f)
@@ -125,6 +137,7 @@ def save_options(f):
 
 
 def common_options(f):
+    """Options wrapper"""
     f = tickers_option(f)
     f = date_range_options(f)
     f = interval_option(f)

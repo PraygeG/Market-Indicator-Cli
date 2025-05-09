@@ -2,7 +2,7 @@
 # Comma-separated list of tickers to fetch (string)
 # Provide as a single quoted string, separated by commas
 # e.g., "AAPL,MSFT,GOOGL"
-tickers: "AAPL,MSFT,NVDA,TSLA, AMZN, GOOGL, META, MCD, UBER, AMD, INTC, TSM" # Comma-separated list of tickers
+tickers: "AAPL,MSFT,NVDA" # Comma-separated list of tickers
 # Date range for the data (YYYY-MM-DD)
 start_date: "2024-01-01"   # Start date (YYYY-MM-DD)
 end_date: "2025-01-01"     # End date (YYYY-MM-DD)

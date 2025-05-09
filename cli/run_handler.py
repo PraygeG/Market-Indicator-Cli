@@ -56,7 +56,7 @@ def load_config(config_file_path: Optional[str]) -> dict[str, Any]:
 def _build_config(config_file: str, **cli_overrides) -> Dict[str, Any]:
     raw = load_config(config_file)
     merged = {**raw, **cli_overrides}
-    
+
     cfg = ConfigModel.model_validate(merged)
     result = cfg.model_dump()
     result["indicators"] = cfg.tuples()
@@ -133,7 +133,7 @@ def run_command(**kwargs):
             kwargs.get("start_date"), "Enter start date (YYYY-MM-DD):\n"
         )
         end = get_valid_date(kwargs.get("end_date"), "Enter end date (YYYY-MM-DD):\n")
-        interval =  get_valid_interval(kwargs.get("interval"))
+        interval = get_valid_interval(kwargs.get("interval"))
         indicators = get_valid_indicators(kwargs.get("indicators"))
         config = {
             "tickers": tickers,

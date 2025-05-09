@@ -10,11 +10,10 @@ class FibonacciRetracement(BaseIndicator):
         super().__init__(column=None)
         self.high_col = "High"
         self.low_col = "Low"
-        self.ratios = ratios
 
-        if isinstance(ratios, (int, float)):
-            self.ratios = [float(ratios)]
-        elif isinstance(ratios, list) and ratios:
+        if len(ratios) == 1 and isinstance(ratios[0], list):
+            self.ratios = [float(r) for r in ratios[0]]
+        else:
             self.ratios = [float(r) for r in ratios]
 
     def calculate(self, data: pd.DataFrame) -> pd.DataFrame:

@@ -20,7 +20,9 @@ class Indicator(BaseModel):
             values["params"] = []
 
         elif isinstance(raw, (int, float)):
-            values["params"] = [int(raw) if isinstance(raw, float) and raw.is_integer() else raw]
+            values["params"] = [
+                int(raw) if isinstance(raw, float) and raw.is_integer() else raw
+            ]
 
         elif isinstance(raw, list):
             normalized = []
@@ -34,7 +36,7 @@ class Indicator(BaseModel):
             values["params"] = normalized
         else:
             raise TypeError("params must be int, float, list, or None")
-        
+
         return values
 
 
@@ -78,7 +80,6 @@ class ConfigModel(BaseModel):
         "png", description="Format of saved plot files, e.g. 'png'"
     )
     save_dpi: Optional[int] = Field(None, description="DPI for saved raster plots")
-
 
     @field_validator("tickers", mode="before")
     def validate_tickers_input(cls, v: str | List[str]) -> List[str]:
