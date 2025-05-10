@@ -3,7 +3,7 @@ from typing import Optional, Any, Dict
 import yaml
 import click
 import sys
-from cli.config_model import ConfigModel, ValidationError
+from cli.config_model import ConfigModel, ValidationError, build_config_interactive
 from cli.options import common_options
 from cli.services import (
     fetch_all_data,
@@ -12,14 +12,6 @@ from cli.services import (
     plot_data,
     plot_multi,
 )
-from validators.input_and_validation import (
-    get_valid_date,
-    get_valid_indicators,
-    get_valid_interval,
-    get_valid_tickers,
-    validate_date_range,
-)
-
 
 class ConfigError(Exception):
     pass
@@ -55,22 +47,23 @@ def load_config(config_file_path: Optional[str]) -> dict[str, Any]:
 
 def _build_config(config_file: str, **cli_overrides) -> Dict[str, Any]:
     raw = load_config(config_file)
-    merged = {**raw, **cli_overrides}
+    filtered_overrides = {k: v for k, v in cli_overrides.items() if v is not None}
+    merged = {**raw, **filtered_overrides}
 
     cfg = ConfigModel.model_validate(merged)
-    result = cfg.model_dump()
-    result["indicators"] = cfg.tuples()
-    return result
+    return cfg
 
 
 def _run_pipeline(config: dict[str, any]):
+    print(f"Config values: plot_style={config.get('plot_style')}, color_scheme={config.get('color_scheme')}")
+
     all_data = fetch_all_data(
         tickers=config["tickers"],
         start_date=config["start_date"],
         end_date=config["end_date"],
         interval=config["interval"],
         source=config["data_source"],
-        api_key=config["api_key"],
+        api_key=config.get("api_key"),
     )
     if config["multi_plot"]:
         indicators = run_multi_ticker_indicators(
@@ -82,15 +75,17 @@ def _run_pipeline(config: dict[str, any]):
             data=all_data,
             indicators=indicators,
             column=config["column"],
-            save=config["save"],
-            save_dir=config["save_dir"],
-            save_format=config["save_format"],
-            save_dpi=config["save_dpi"],
-            normalize=config["normalize"],
-            log_scale=config["log_scale"],
+            save=config.get("save", False),
+            save_dir=config.get("save_dir"),
+            save_format=config.get("save_format", "png"),
+            save_dpi=config.get("save_dpi", False),
+            normalize=config.get("normalize", False),
+            log_scale=config.get("log_scale", False),
         )
     else:
         for ticker, data in all_data.items():
+            print(config["plot_style"])
+            print(config["color_scheme"])
             if data.empty:
                 print(f"No data found for {ticker}. Skipping...")
                 continue
@@ -104,13 +99,13 @@ def _run_pipeline(config: dict[str, any]):
                 color_scheme=config.get("color_scheme"),
                 up_color=config.get("up_color"),
                 down_color=config.get("down_color"),
-                save=config.get("save"),
+                save=config.get("save", False),
                 save_dir=config.get("save_dir"),
                 save_dpi=config.get("save_dpi"),
                 interval=config["interval"],
                 start_date=config["start_date"],
                 end_date=config["end_date"],
-                interactive=config["interactive"],
+                interactive=config.get("interactive", False),
             )
 
 
@@ -127,54 +122,16 @@ def run_command(**kwargs):
     Main entrypoint.
     """
     config_file = kwargs.get("config_file")
-    if not config_file:
-        tickers = get_valid_tickers(kwargs.get("tickers"))
-        start = get_valid_date(
-            kwargs.get("start_date"), "Enter start date (YYYY-MM-DD):\n"
-        )
-        end = get_valid_date(kwargs.get("end_date"), "Enter end date (YYYY-MM-DD):\n")
-        interval = get_valid_interval(kwargs.get("interval"))
-        indicators = get_valid_indicators(kwargs.get("indicators"))
-        config = {
-            "tickers": tickers,
-            "start_date": start,
-            "end_date": end,
-            "interval": interval,
-            "indicators": indicators,
-            "data_source": kwargs.get("data_source"),
-            "api_key": kwargs.get("api_key"),
-            "column": kwargs.get("column"),
-            "plot_style": kwargs.get("plot_style"),
-            "color_scheme": kwargs.get("color_scheme"),
-            "up_color": kwargs.get("up_color"),
-            "down_color": kwargs.get("down_color"),
-            "interactive": kwargs.get("interactive"),
-            "multi_plot": kwargs.get("multi_plot"),
-            "normalize": kwargs.get("normalize"),
-            "log_scale": kwargs.get("log_scale"),
-            "save": kwargs.get("save"),
-            "save_dir": kwargs.get("save_dir"),
-            "save_format": kwargs.get("save_format"),
-            "save_dpi": kwargs.get("save_dpi"),
-        }
-    else:
-        argv = sys.argv[1:]
-        ctx = click.get_current_context()
-        provided = set()
-        for param in ctx.command.params:
-            for opt in param.opts:
-                for arg in argv:
-                    if arg == opt or arg.startswith(opt + "="):
-                        provided.add(param.name)
-
+    if config_file:
         cli_overrides = {
-            name: kwargs[name] for name in provided if name != "config_file"
+            k: v for k, v in kwargs.items() if v is not None and k != "config_file"
         }
-        try:
-            config = _build_config(config_file=config_file, **cli_overrides)
-            print(config)
-        except ConfigError as e:
-            click.echo(f"Configuration validation error:\n{e}", err=True)
-            raise click.Abort()
-
-    _run_pipeline(config)
+        config_model = _build_config(config_file)
+        config = config_model.model_dump()
+        config["indicators"] = config_model.tuples()
+        _run_pipeline(config)
+    else:
+        config_model = build_config_interactive(kwargs)
+        config = config_model.model_dump()
+        config["indicators"] = config_model.tuples()
+        _run_pipeline(config)

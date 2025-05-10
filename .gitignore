@@ -5,3 +5,4 @@ Pipfile.lock/
 .pylintrc/
 config.yaml/
 tests/
+.pytest_cache/
