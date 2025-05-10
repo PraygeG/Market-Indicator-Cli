@@ -2,8 +2,7 @@ import os
 from typing import Optional, Any, Dict
 import yaml
 import click
-import sys
-from cli.config_model import ConfigModel, ValidationError, build_config_interactive
+from cli.config_model import ConfigModel, build_config_interactive
 from cli.options import common_options
 from cli.services import (
     fetch_all_data,
@@ -12,6 +11,7 @@ from cli.services import (
     plot_data,
     plot_multi,
 )
+
 
 class ConfigError(Exception):
     pass
@@ -25,7 +25,7 @@ def load_config(config_file_path: Optional[str]) -> dict[str, Any]:
         raise ConfigError(f"Configuration file not found: {config_file_path}")
 
     try:
-        with open(config_file_path, "r") as f:
+        with open(config_file_path, "r", encoding="utf-8") as f:
             config_data = yaml.safe_load(f)
         if config_data is None:
             return {}
@@ -55,7 +55,9 @@ def _build_config(config_file: str, **cli_overrides) -> Dict[str, Any]:
 
 
 def _run_pipeline(config: dict[str, any]):
-    print(f"Config values: plot_style={config.get('plot_style')}, color_scheme={config.get('color_scheme')}")
+    print(
+        f"Config values: plot_style={config.get('plot_style')}, color_scheme={config.get('color_scheme')}"
+    )
 
     all_data = fetch_all_data(
         tickers=config["tickers"],
@@ -105,7 +107,6 @@ def _run_pipeline(config: dict[str, any]):
                 interval=config["interval"],
                 start_date=config["start_date"],
                 end_date=config["end_date"],
-                interactive=config.get("interactive", False),
             )
 
 

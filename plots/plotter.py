@@ -6,6 +6,8 @@ import pandas as pd
 from plots.plot_methods import (
     COLOR_SCHEMES,
     apply_color_scheme,
+    resolve_color_scheme,
+    create_indicator_subplots,
     plot_macd,
     plot_bbands,
     plot_rsi,
@@ -15,11 +17,14 @@ from plots.plot_methods import (
     analyze_indicators,
     assign_axes,
     save_plot,
-    enable_interactive,
 )
 
 
 class Plotter:
+    """
+    Handles plotting of stock data and technical indicators using matplotlib.
+    """
+
     def __init__(
         self,
         title: str = "Stock Data with Indicators",
@@ -27,12 +32,11 @@ class Plotter:
         up_color: str = None,
         down_color: str = None,
     ):
+        """
+        Initialize the Plotter with title and color scheme.
+        """
         self.title = title
-        self.scheme = COLOR_SCHEMES.get(color_scheme, COLOR_SCHEMES["default"]).copy()
-        if up_color and up_color.lower() != "none":
-            self.scheme["up"] = up_color
-        if down_color and down_color.lower() != "none":
-            self.scheme["down"] = down_color
+        self.scheme = resolve_color_scheme(color_scheme, up_color, down_color)
 
     def plot(
         self,
@@ -47,22 +51,17 @@ class Plotter:
         interval: str = None,
         start_date: str = None,
         end_date: str = None,
-        interactive: bool = False,
     ):
+        """
+        Plot the stock data and indicators. Optionally save or show interactively.
+        """
         if column not in data.columns:
             raise ValueError(f"DataFrame must contain a '{column}' column.")
 
         indicators_info = analyze_indicators(indicators)
         subplot_count = indicators_info["subplot_count"]
 
-        fig, axes = plt.subplots(
-            subplot_count,
-            1,
-            figsize=(12, 6 + 2 * subplot_count),
-            gridspec_kw={"height_ratios": [3] + [1] * (subplot_count - 1)},
-        )
-        if subplot_count == 1:
-            axes = [axes]
+        fig, axes = create_indicator_subplots(subplot_count)
 
         apply_color_scheme(fig, axes, self.scheme, self.title)
         fig.suptitle(f"{self.title} - {ticker}", color=self.scheme["text"])
@@ -140,10 +139,3 @@ class Plotter:
             )
         else:
             plt.show()
-        # Enable interactive plots
-        if interactive:
-            enable_interactive(fig, data)
-            plt.draw()
-            plt.gcf().canvas.mpl_connect("close_event", lambda evt: plt.close("all"))
-            print("Interactive plot enabled. Close the plot window to continue.")
-            plt.show(block=True)

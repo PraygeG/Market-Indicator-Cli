@@ -172,7 +172,6 @@ def plot_data(
         interval=interval,
         start_date=start_date,
         end_date=end_date,
-        interactive=interactive,
     )
 
 

@@ -10,11 +10,13 @@ class BBANDS(BaseIndicator):
     def __init__(
         self, window: int, standard_dev_num: int, column="Close"
     ) -> pd.DataFrame:
+        """Initialize BBANDS indicator."""
         super().__init__(column)
         self.window = window
         self.standard_dev_num = standard_dev_num
 
     def calculate(self, data: pd.DataFrame) -> pd.DataFrame:
+        """Calculate the Bollinger Bands indicator."""
         if self.column not in data.columns:
             raise ValueError(f"DataFrame must contain a '{self.column}' column.")
 

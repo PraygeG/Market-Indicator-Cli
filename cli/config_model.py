@@ -1,7 +1,6 @@
-from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
-from datetime import date
+from datetime import date, datetime
 from typing import List, Tuple, Optional, Dict, Any, Union
-from datetime import datetime
+from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 import yfinance as yf
 
 
@@ -54,37 +53,19 @@ def _is_positive_float(s: str) -> bool:
         return False
 
 
+def _is_positive_number(p) -> bool:
+    if isinstance(p, str):
+        return p.isdigit() and int(p) > 0
+    return isinstance(p, (int, float)) and p > 0
+
+
 supported_indicators = {
-    "EMA": (
-        1,
-        lambda p: (isinstance(p, str) and p.isdigit() and int(p) > 0)
-        or (isinstance(p, (int, float)) and p > 0),
-    ),
-    "SMA": (
-        1,
-        lambda p: (isinstance(p, str) and p.isdigit() and int(p) > 0)
-        or (isinstance(p, (int, float)) and p > 0),
-    ),
-    "RSI": (
-        1,
-        lambda p: (isinstance(p, str) and p.isdigit() and int(p) > 0)
-        or (isinstance(p, (int, float)) and p > 0),
-    ),
-    "MACD": (
-        3,
-        lambda p: (isinstance(p, str) and p.isdigit() and int(p) > 0)
-        or (isinstance(p, (int, float)) and p > 0),
-    ),
-    "BBANDS": (
-        2,
-        lambda p: (isinstance(p, str) and p.isdigit() and int(p) > 0)
-        or (isinstance(p, (int, float)) and p > 0),
-    ),
-    "ADX": (
-        1,
-        lambda p: (isinstance(p, str) and p.isdigit() and int(p) > 0)
-        or (isinstance(p, (int, float)) and p > 0),
-    ),
+    "EMA": (1, _is_positive_number),
+    "SMA": (1, _is_positive_number),
+    "RSI": (1, _is_positive_number),
+    "MACD": (3, _is_positive_number),
+    "BBANDS": (2, _is_positive_number),
+    "ADX": (1, _is_positive_number),
     "OBV": (0, None),
     "FIBO": (-1, _is_positive_float),
 }

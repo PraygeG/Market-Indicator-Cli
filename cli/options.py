@@ -1,6 +1,6 @@
-import click
+"""Click options wrapper module"""
 
-"""Module for click options and wrapper."""
+import click
 
 
 def tickers_option(f):

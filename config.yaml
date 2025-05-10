@@ -5,7 +5,7 @@
 tickers: "AAPL,MSFT,NVDA" # Comma-separated list of tickers
 # Date range for the data (YYYY-MM-DD)
 start_date: "2024-01-01"   # Start date (YYYY-MM-DD)
-end_date: "2025-01-01"     # End date (YYYY-MM-DD)
+end_date: "2024-03-01"     # End date (YYYY-MM-DD)
 # Data interval
 # Valid: 1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo
 interval: "1d"             # Data interval (e.g., 1m, 5m, 1h, 1d, 1wk)
@@ -18,7 +18,7 @@ column: "Close"
 # Indicator Settings
 # Comma-separated list: INDICATOR_NAME:param1-param2,OTHER_INDICATOR:param
 # Example: "RSI:14,EMA:50,SMA:100,MACD:12-26-9,BBANDS:20-2,FIBO:0.236-0.382-0.5-0.618"
-indicators: "EMA:20,RSI:14,MACD:12-26-9,FIBO:0.236-0.382-0.5-0.618"
+indicators: "MACD:12-26-9,FIBO:0.236-0.382-0.5-0.618,ADX:14,EMA:7,EMA:14"
 
 # Plotting Options
 plot_style: "candlestick" # line or candlestick

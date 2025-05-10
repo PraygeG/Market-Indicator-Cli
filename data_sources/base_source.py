@@ -17,4 +17,3 @@ class BaseSource(ABC):
         Returns:
             Data frame with stock data
         """
-        pass

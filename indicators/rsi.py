@@ -8,10 +8,12 @@ class RSI(BaseIndicator):
     """
 
     def __init__(self, window: int, column="Close"):
+        """Initialize RSI indicator."""
         super().__init__(column)
         self.window = window
 
     def calculate(self, data: pd.DataFrame) -> pd.Series:
+        """Calculate the RSI indicator."""
         if self.column not in data.columns:
             raise ValueError(f"DataFrame must contain a '{self.column}' column")
 

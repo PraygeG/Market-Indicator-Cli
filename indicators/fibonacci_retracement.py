@@ -7,6 +7,7 @@ class FibonacciRetracement(BaseIndicator):
         self,
         *ratios: float | list[float],
     ):
+        """Initialize Fibonacci Retracement indicator."""
         super().__init__(column=None)
         self.high_col = "High"
         self.low_col = "Low"
@@ -17,6 +18,7 @@ class FibonacciRetracement(BaseIndicator):
             self.ratios = [float(r) for r in ratios]
 
     def calculate(self, data: pd.DataFrame) -> pd.DataFrame:
+        """Calculate Fibonacci retracement levels."""
         if self.high_col not in data or self.low_col not in data:
             raise ValueError(
                 f"Data must contain '{self.high_col}' and '{self.low_col}' columns."

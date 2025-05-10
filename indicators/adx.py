@@ -12,20 +12,20 @@ class ADX(BaseIndicator):
         self,
         window: int = 14,
     ):
+        """Initialize ADX indicator."""
         super().__init__(column=None)
         if not isinstance(window, int) or window <= 1:
             raise ValueError("Window must be an integer greater than 1.")
         self.window: int = window
 
     def _wilders_smoothing(self, series: pd.Series, window: int) -> pd.Series:
+        """Apply Wilder's smoothing to a series."""
         if not isinstance(series, pd.Series):
             series = pd.Series(series)
         return series.ewm(alpha=1 / window, adjust=False, min_periods=window).mean()
 
     def calculate(self, data: pd.DataFrame) -> pd.DataFrame:
-        """
-        Calculates the ADX, +DI, and -DI values.
-        """
+        """Calculate the ADX, +DI, and -DI values."""
         data = data.copy()
         required_columns: list[str] = ["High", "Low", "Close"]
         if not all(col in data.columns for col in required_columns):

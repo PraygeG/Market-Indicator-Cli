@@ -8,8 +8,14 @@ class BaseIndicator(ABC):
     """
 
     def __init__(self, column: str = "Close"):
+        """Initialize the base indicator."""
         self.column = column
 
     @abstractmethod
     def calculate(self, data: pd.DataFrame) -> pd.Series:
-        pass
+        """Calculate the indicator values."""
+
+    def _check_required_columns(self, data: pd.DataFrame, required: list[str]):
+        missing = [col for col in required if col not in data.columns]
+        if missing:
+            raise ValueError(f"DataFrame must contain columns: {missing}")

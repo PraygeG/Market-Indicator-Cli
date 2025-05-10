@@ -8,14 +8,20 @@ class MACD(BaseIndicator):
     """
 
     def __init__(
-        self, short_window: int, long_window: int, signal_window: int, column="Close"
+        self,
+        short_window: int = 12,
+        long_window: int = 26,
+        signal_window: int = 9,
+        column="Close",
     ):
+        """Initialize MACD indicator."""
         super().__init__(column)
         self.short_window = short_window
         self.long_window = long_window
         self.signal_window = signal_window
 
     def calculate(self, data: pd.DataFrame) -> pd.DataFrame:
+        """Calculate the MACD indicator."""
         if self.column not in data.columns:
             raise ValueError(f"DataFrame must contain a '{self.column}' column.")
 

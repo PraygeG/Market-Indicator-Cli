@@ -6,6 +6,8 @@ from matplotlib.axes import Axes
 from plots.plot_methods import (
     COLOR_SCHEMES,
     apply_color_scheme,
+    resolve_color_scheme,
+    create_indicator_subplots,
     plot_macd,
     plot_bbands,
     plot_rsi,
@@ -15,7 +17,6 @@ from plots.plot_methods import (
     analyze_indicators,
     assign_axes,
     save_plot,
-    enable_interactive,
 )
 
 
@@ -28,11 +29,7 @@ class CandlestickPlotter:
         down_color: str = None,
     ):
         self.title = title
-        self.scheme = COLOR_SCHEMES.get(color_scheme, COLOR_SCHEMES["default"]).copy()
-        if up_color and up_color.lower() != "none":
-            self.scheme["up"] = up_color
-        if down_color and down_color.lower() != "none":
-            self.scheme["down"] = down_color
+        self.scheme = resolve_color_scheme(color_scheme, up_color, down_color)
 
     def _plot_candlesticks(self, ax: Axes, data: pd.DataFrame):
         """Draw candlesticks on the given axis"""
@@ -133,14 +130,7 @@ class CandlestickPlotter:
         indicators_info = analyze_indicators(indicators)
         subplot_count = indicators_info["subplot_count"]
 
-        fig, axes = plt.subplots(
-            subplot_count,
-            1,
-            figsize=(12, 6 + 2 * subplot_count),
-            gridspec_kw={"height_ratios": [3] + [1] * (subplot_count - 1)},
-        )
-        if subplot_count == 1:
-            axes = [axes]
+        fig, axes = create_indicator_subplots(subplot_count)
 
         apply_color_scheme(fig, axes, self.scheme, self.title)
         fig.suptitle(f"{self.title} - {ticker}", color=self.scheme["text"])
