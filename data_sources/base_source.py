@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import pandas as pd
 
 
 class BaseSource(ABC):
@@ -8,7 +9,9 @@ class BaseSource(ABC):
     """
 
     @abstractmethod
-    def fetch_data(self, ticker: str, start_date: str, end_date: str, interval: str):
+    def fetch_data(
+        self, ticker: str, start_date: str, end_date: str, interval: str
+    ) -> pd.DataFrame:
         """
         Fetch data for given ticker and date range.
             ticker: Stock ticker symbol

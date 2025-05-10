@@ -8,8 +8,8 @@ class BBANDS(BaseIndicator):
     """
 
     def __init__(
-        self, window: int, standard_dev_num: int, column="Close"
-    ) -> pd.DataFrame:
+        self, window: int, standard_dev_num: int, column: str = "Close"
+    ) -> None:
         """Initialize BBANDS indicator."""
         super().__init__(column)
         self.window = window

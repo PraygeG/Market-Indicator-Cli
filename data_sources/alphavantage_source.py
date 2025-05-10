@@ -11,7 +11,7 @@ class AlphavantageSource(BaseSource):
 
     BASE_URL = "https://www.alphavantage.co/query"
 
-    def __init__(self, api_key=None):
+    def __init__(self, api_key: str = None) -> None:
         """
         Initialize AlphaVantage source with API key.
         """
@@ -24,7 +24,7 @@ class AlphavantageSource(BaseSource):
                     "AlphaVantage API key is required. Set it via constructor or ALHPA_VANTAGE_API_KEY environment variable."
                 )
 
-    def _map_interval(self, interval):
+    def _map_interval(self, interval: str):
         interval_map = {
             "1m": "1min",
             "5m": "5min",

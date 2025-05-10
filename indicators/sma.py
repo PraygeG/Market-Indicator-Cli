@@ -7,7 +7,7 @@ class SMA(BaseIndicator):
     Simple moving average
     """
 
-    def __init__(self, window: int, column: str = "Close"):
+    def __init__(self, window: int, column: str = "Close") -> None:
         """Initialize SMA indicator."""
         super().__init__(column)
         self.window = window

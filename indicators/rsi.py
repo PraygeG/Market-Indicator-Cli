@@ -7,7 +7,7 @@ class RSI(BaseIndicator):
     Relative Strength Index
     """
 
-    def __init__(self, window: int, column="Close"):
+    def __init__(self, window: int, column: str = "Close") -> None:
         """Initialize RSI indicator."""
         super().__init__(column)
         self.window = window

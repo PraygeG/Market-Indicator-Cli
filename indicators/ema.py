@@ -7,7 +7,7 @@ class EMA(BaseIndicator):
     Exponential moving average
     """
 
-    def __init__(self, window: int, column: str = "Close"):
+    def __init__(self, window: int, column: str = "Close") -> None:
         """Initialize EMA indicator."""
         super().__init__(column)
         self.window = window

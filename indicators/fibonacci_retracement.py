@@ -6,7 +6,7 @@ class FibonacciRetracement(BaseIndicator):
     def __init__(
         self,
         *ratios: float | list[float],
-    ):
+    ) -> None:
         """Initialize Fibonacci Retracement indicator."""
         super().__init__(column=None)
         self.high_col = "High"

@@ -27,11 +27,11 @@ class CandlestickPlotter:
         color_scheme: str = "default",
         up_color: str = None,
         down_color: str = None,
-    ):
+    ) -> None:
         self.title = title
         self.scheme = resolve_color_scheme(color_scheme, up_color, down_color)
 
-    def _plot_candlesticks(self, ax: Axes, data: pd.DataFrame):
+    def _plot_candlesticks(self, ax: Axes, data: pd.DataFrame) -> None:
         """Draw candlesticks on the given axis"""
         data = data.sort_index()
         date_nums = [mdates.date2num(d) for d in data.index]
@@ -120,7 +120,7 @@ class CandlestickPlotter:
         start_date: str = None,
         end_date: str = None,
         interactive: bool = False,
-    ):
+    ) -> None:
         required_columns = ["Open", "High", "Low", "Close"]
         if not all(col in data.columns for col in required_columns):
             raise ValueError(
@@ -144,16 +144,17 @@ class CandlestickPlotter:
 
         self._plot_candlesticks(ax_price, data)
 
-        for name, (series, params) in indicators.items():
+        for name, (series, _) in indicators.items():
             if (
                 name.startswith("MACD")
                 or name.startswith("BBANDS")
                 or name.startswith("RSI")
                 or name.startswith("OBV")
                 or name.startswith("FIBO")
+                or name.startswith("ADX")
             ):
                 continue
-            ax_price.plot(series.index, series, label=f"{name} {params}", linewidth=1.5)
+            ax_price.plot(series.index, series, label=f"{name}", linewidth=1.5)
         if indicators_info["has_bbands"]:
             bbands_key = next(name for name in indicators if "BBANDS" in name)
             bbands_data, params = indicators[bbands_key]
@@ -176,8 +177,8 @@ class CandlestickPlotter:
 
         if indicators_info["has_macd"]:
             macd_key = next(name for name in indicators if "MACD" in name)
-            macd_data, params = indicators[macd_key]
-            plot_macd(ax_macd, macd_data, params, self.scheme)
+            macd_data, _ = indicators[macd_key]
+            plot_macd(ax_macd, macd_data, self.scheme)
 
         if indicators_info["has_rsi"]:
             rsi_key = next(name for name in indicators if name.startswith("RSI"))

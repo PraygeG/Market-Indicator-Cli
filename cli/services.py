@@ -143,7 +143,6 @@ def plot_data(
     interval: str = None,
     start_date: str = None,
     end_date: str = None,
-    interactive: bool = False,
 ):
     title = f"Stock analysis for {ticker}"
     if plot_style == "candlestick":

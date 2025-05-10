@@ -11,7 +11,7 @@ class ADX(BaseIndicator):
     def __init__(
         self,
         window: int = 14,
-    ):
+    ) -> None:
         """Initialize ADX indicator."""
         super().__init__(column=None)
         if not isinstance(window, int) or window <= 1:

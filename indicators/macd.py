@@ -12,8 +12,8 @@ class MACD(BaseIndicator):
         short_window: int = 12,
         long_window: int = 26,
         signal_window: int = 9,
-        column="Close",
-    ):
+        column: str = "Close",
+    ) -> None:
         """Initialize MACD indicator."""
         super().__init__(column)
         self.short_window = short_window

@@ -51,7 +51,7 @@ class Plotter:
         interval: str = None,
         start_date: str = None,
         end_date: str = None,
-    ):
+    ) -> None:
         """
         Plot the stock data and indicators. Optionally save or show interactively.
         """
@@ -80,7 +80,7 @@ class Plotter:
             color=self.scheme["up"],
             linewidth=1.5,
         )
-        for name, (series, params) in indicators.items():
+        for name, (series, _) in indicators.items():
             if (
                 name.startswith("MACD")
                 or name.startswith("RSI")
@@ -110,8 +110,8 @@ class Plotter:
 
         if indicators_info["has_macd"]:
             macd_key = next(name for name in indicators if "MACD" in name)
-            macd_data, params = indicators[macd_key]
-            plot_macd(ax_macd, macd_data, params, self.scheme)
+            macd_data, _ = indicators[macd_key]
+            plot_macd(ax_macd, macd_data, self.scheme)
 
         if indicators_info["has_rsi"]:
             rsi_key = next(name for name in indicators if name.startswith("RSI"))

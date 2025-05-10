@@ -210,7 +210,7 @@ def plot_fibo(
     ax.grid(color=scheme.get("grid", "#D3D3D3"), linestyle=":")
 
 
-def plot_macd(ax: Axes, macd_data: pd.DataFrame, params: Any, scheme: dict) -> None:
+def plot_macd(ax: Axes, macd_data: pd.DataFrame, scheme: dict) -> None:
     """
     Plot the MACD indicator on the axis.
     """
@@ -351,7 +351,9 @@ def plot_adx(ax: Axes, adx_data: pd.DataFrame, scheme: dict) -> None:
     ax.grid(color=scheme.get("grid", None))
 
 
-def analyze_indicators(indicators: dict, is_multi_ticker: bool = False) -> dict:
+def analyze_indicators(
+    indicators: dict, is_multi_ticker: bool = False
+) -> dict[str, int | bool]:
     """
     Analyze indicator presence and determine the number of subplots.
     """

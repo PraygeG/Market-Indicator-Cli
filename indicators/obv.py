@@ -7,7 +7,7 @@ class OBV(BaseIndicator):
     On balance volume
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize OBV indicator."""
         super().__init__(column=None)
 
