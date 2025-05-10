@@ -6,3 +6,5 @@ Pipfile.lock/
 config.yaml/
 tests/
 .pytest_cache/
+finishingtouches/
+.pylintrc/
