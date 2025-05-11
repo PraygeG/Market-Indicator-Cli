@@ -176,7 +176,7 @@ def plot_data(
 
 def plot_multi(
     data: dict[str, pd.DataFrame],
-    indicators: dict,
+    indicators: dict[str, tuple[pd.DataFrame | pd.Series, list[int]]],
     column: str,
     save: bool,
     save_dir: str,

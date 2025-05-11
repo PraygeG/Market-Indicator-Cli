@@ -53,7 +53,7 @@ def _is_positive_float(s: str) -> bool:
         return False
 
 
-def _is_positive_number(p) -> bool:
+def _is_positive_number(p: str | int | float) -> bool:
     if isinstance(p, str):
         return p.isdigit() and int(p) > 0
     return isinstance(p, (int, float)) and p > 0
@@ -91,7 +91,8 @@ def validate_tickers(tickers_str: str) -> list[str]:
             error_msg = str(e).lower()
             if "404" in error_msg or "not found" in error_msg:
                 invalid.append(ticker)
-            if "Rate" in error_msg or "limited" in error_msg:
+                print(f"Ticker: {ticker} does not exist.")
+            elif "Rate" in error_msg or "limited" in error_msg:
                 print(
                     error_msg
                     + "\nTry updating the yfinance package, it could be a bug that happens when the package is out of date."

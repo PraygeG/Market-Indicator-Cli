@@ -1,4 +1,6 @@
 import os
+import sys
+import logging
 from typing import Optional, Any, Dict
 import yaml
 import click
@@ -11,10 +13,14 @@ from cli.services import (
     plot_data,
     plot_multi,
 )
+from cli.exceptions import ConfigError, DataSourceError, IndicatorError, PlotError, ValidationError
 
-
-class ConfigError(Exception):
-    pass
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+    handlers=[logging.StreamHandler(sys.stderr)],
+)
+logger = logging.getLogger("market-indicator-cli")
 
 
 def load_config(config_file_path: Optional[str]) -> dict[str, Any]:
@@ -39,75 +45,83 @@ def load_config(config_file_path: Optional[str]) -> dict[str, Any]:
         if hasattr(e, "problem_mark") and e.problem_mark is not None:
             error_context = f" at line {e.problem_mark.line + 1}, column {e.problem_mark.column + 1}"
         raise ConfigError(
-            f"Error parsing YAML configuration file {config_file_path}: {e}"
+            f"Error parsing YAML configuration file {config_file_path}{error_context}: {e}"
         )
     except Exception as e:
         raise ConfigError(f"Could not load configuration file {config_file_path}: {e}")
 
 
 def _build_config(config_file: str, **cli_overrides) -> Dict[str, Any]:
-    raw = load_config(config_file)
-    filtered_overrides = {k: v for k, v in cli_overrides.items() if v is not None}
-    merged = {**raw, **filtered_overrides}
+    try:
+        raw = load_config(config_file)
+        filtered_overrides = {k: v for k, v in cli_overrides.items() if v is not None}
+        merged = {**raw, **filtered_overrides}
 
-    cfg = ConfigModel.model_validate(merged)
-    return cfg
+        cfg = ConfigModel.model_validate(merged)
+        return cfg
+    except Exception as e:
+        logger.error("Failed to build configuration: %s", e, exc_info=True)
+        raise ConfigError("Failed to build configuration") from e
 
-
-def _run_pipeline(config: dict[str, any]):
-    print(
-        f"Config values: plot_style={config.get('plot_style')}, color_scheme={config.get('color_scheme')}"
-    )
-
-    all_data = fetch_all_data(
-        tickers=config["tickers"],
-        start_date=config["start_date"],
-        end_date=config["end_date"],
-        interval=config["interval"],
-        source=config["data_source"],
-        api_key=config.get("api_key"),
-    )
-    if config["multi_plot"]:
-        indicators = run_multi_ticker_indicators(
-            ticker_data=all_data,
-            indicators=config["indicators"],
-            column=config["column"],
+def _run_pipeline(config: dict[str, any]) -> None:
+    try:
+        all_data = fetch_all_data(
+            tickers=config["tickers"],
+            start_date=config["start_date"],
+            end_date=config["end_date"],
+            interval=config["interval"],
+            source=config["data_source"],
+            api_key=config.get("api_key"),
         )
-        plot_multi(
-            data=all_data,
-            indicators=indicators,
-            column=config["column"],
-            save=config.get("save", False),
-            save_dir=config.get("save_dir"),
-            save_format=config.get("save_format", "png"),
-            save_dpi=config.get("save_dpi", False),
-            normalize=config.get("normalize", False),
-            log_scale=config.get("log_scale", False),
-        )
-    else:
-        for ticker, data in all_data.items():
-            print(config["plot_style"])
-            print(config["color_scheme"])
-            if data.empty:
-                print(f"No data found for {ticker}. Skipping...")
-                continue
-            indicators = run_indicators(data, config["indicators"], config["column"])
-            plot_data(
-                data,
-                indicators,
-                config["column"],
-                ticker,
-                plot_style=config.get("plot_style"),
-                color_scheme=config.get("color_scheme"),
-                up_color=config.get("up_color"),
-                down_color=config.get("down_color"),
+        if config["multi_plot"]:
+            indicators = run_multi_ticker_indicators(
+                ticker_data=all_data,
+                indicators=config["indicators"],
+                column=config["column"],
+            )
+            plot_multi(
+                data=all_data,
+                indicators=indicators,
+                column=config["column"],
                 save=config.get("save", False),
                 save_dir=config.get("save_dir"),
-                save_dpi=config.get("save_dpi"),
-                interval=config["interval"],
-                start_date=config["start_date"],
-                end_date=config["end_date"],
+                save_format=config.get("save_format", "png"),
+                save_dpi=config.get("save_dpi", False),
+                normalize=config.get("normalize", False),
+                log_scale=config.get("log_scale", False),
             )
+        else:
+            for ticker, data in all_data.items():
+                print(config["plot_style"])
+                print(config["color_scheme"])
+                if data.empty:
+                    print(f"No data found for {ticker}. Skipping...")
+                    continue
+                indicators = run_indicators(data, config["indicators"], config["column"])
+                plot_data(
+                    data,
+                    indicators,
+                    config["column"],
+                    ticker,
+                    plot_style=config.get("plot_style"),
+                    color_scheme=config.get("color_scheme"),
+                    up_color=config.get("up_color"),
+                    down_color=config.get("down_color"),
+                    save=config.get("save", False),
+                    save_dir=config.get("save_dir"),
+                    save_dpi=config.get("save_dpi"),
+                    interval=config["interval"],
+                    start_date=config["start_date"],
+                    end_date=config["end_date"],
+                )
+    except (DataSourceError, IndicatorError, PlotError, ValidationError, ConfigError) as e:
+        logger.error("Pipeline error: %s", e, exc_info=True)
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        logger.critical("Unexpected error: %s", e, exc_info=True)
+        click.echo(f"Unexpected erro: {e}", err=True)
+        sys.exit(2)
 
 
 @click.command()
@@ -122,17 +136,26 @@ def run_command(**kwargs):
     """
     Main entrypoint.
     """
-    config_file = kwargs.get("config_file")
-    if config_file:
-        cli_overrides = {
-            k: v for k, v in kwargs.items() if v is not None and k != "config_file"
-        }
-        config_model = _build_config(config_file)
-        config = config_model.model_dump()
-        config["indicators"] = config_model.tuples()
-        _run_pipeline(config)
-    else:
-        config_model = build_config_interactive(kwargs)
-        config = config_model.model_dump()
-        config["indicators"] = config_model.tuples()
-        _run_pipeline(config)
+    try:
+        config_file = kwargs.get("config_file")
+        if config_file:
+            cli_overrides = {
+                k: v for k, v in kwargs.items() if v is not None and k != "config_file"
+            }
+            config_model = _build_config(config_file)
+            config = config_model.model_dump()
+            config["indicators"] = config_model.tuples()
+            _run_pipeline(config)
+        else:
+            config_model = build_config_interactive(kwargs)
+            config = config_model.model_dump()
+            config["indicators"] = config_model.tuples()
+            _run_pipeline(config)
+    except (ConfigError, ValidationError) as e:
+        logger.error("Configuration error: %s", e, exc_info=True)
+        click.echo(f"Configuration error: {e}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        logger.critical("Fatal error: %s", e, exc_info=True)
+        click.echo("Fatal error: %s", e, err=True)
+        sys.exit(2)

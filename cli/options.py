@@ -1,9 +1,13 @@
 """Click options wrapper module"""
 
+from typing import Callable, TypeVar, ParamSpec
 import click
 
+P = ParamSpec("P")
+R = TypeVar("R")
 
-def tickers_option(f):
+
+def tickers_option(f: Callable[P, R]) -> Callable[P, R]:
     return click.option(
         "--tickers",
         "--t",
@@ -12,7 +16,7 @@ def tickers_option(f):
     )(f)
 
 
-def date_range_options(f):
+def date_range_options(f: Callable[P, R]) -> Callable[P, R]:
     """Date range options."""
     f = click.option(
         "--start-date", "--start", default=None, help="Start date (YYYY-MM-DD)"
@@ -23,7 +27,7 @@ def date_range_options(f):
     return f
 
 
-def interval_option(f):
+def interval_option(f: Callable[P, R]) -> Callable[P, R]:
     return click.option(
         "--interval",
         default=None,
@@ -32,7 +36,7 @@ Valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo Intraday data can
     )(f)
 
 
-def indicator_option(f):
+def indicator_option(f: Callable[P, R]) -> Callable[P, R]:
     return click.option(
         "--indicators",
         default=None,
@@ -40,7 +44,7 @@ def indicator_option(f):
     )(f)
 
 
-def data_source_option(f):
+def data_source_option(f: Callable[P, R]) -> Callable[P, R]:
     return click.option(
         "--data-source",
         "--source",
@@ -50,19 +54,19 @@ def data_source_option(f):
     )(f)
 
 
-def api_key_option(f):
+def api_key_option(f: Callable[P, R]) -> Callable[P, R]:
     return click.option(
         "--api-key", default=None, help="API key for AlphaVantage data source"
     )(f)
 
 
-def column_option(f):
+def column_option(f: Callable[P, R]) -> Callable[P, R]:
     return click.option(
         "--column", default="Close", help="Column to use for calculations"
     )(f)
 
 
-def plot_options(f):
+def plot_options(f: Callable[P, R]) -> Callable[P, R]:
     """Plot style and color scheme options."""
     f = click.option(
         "--plot-style",
@@ -94,7 +98,7 @@ def plot_options(f):
     return f
 
 
-def multi_plot_options(f):
+def multi_plot_options(f: Callable[P, R]) -> Callable[P, R]:
     """
     Enable plotting multiple tickers on the same chart,
     plus normalization and log scale optionally for better readiness
@@ -114,7 +118,7 @@ def multi_plot_options(f):
     return f
 
 
-def save_options(f):
+def save_options(f: Callable[P, R]) -> Callable[P, R]:
     """
     Save plots in a given directory, format and dpi for raster formats
     instead of showing, good for running plots at scale.

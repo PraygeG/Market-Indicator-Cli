@@ -210,7 +210,7 @@ def plot_fibo(
     ax.grid(color=scheme.get("grid", "#D3D3D3"), linestyle=":")
 
 
-def plot_macd(ax: Axes, macd_data: pd.DataFrame, scheme: dict) -> None:
+def plot_macd(ax: Axes, macd_data: pd.DataFrame, scheme: dict[str, str]) -> None:
     """
     Plot the MACD indicator on the axis.
     """
@@ -242,7 +242,9 @@ def plot_macd(ax: Axes, macd_data: pd.DataFrame, scheme: dict) -> None:
     ax.grid(color=scheme.get("grid", None))
 
 
-def plot_bbands(ax: Axes, bbands_data: pd.DataFrame, params: Any, scheme: dict) -> None:
+def plot_bbands(
+    ax: Axes, bbands_data: pd.DataFrame, params: int, scheme: dict[str, str]
+) -> None:
     """
     Plot Bollinger Bands on the axis.
     """
@@ -278,7 +280,9 @@ def plot_bbands(ax: Axes, bbands_data: pd.DataFrame, params: Any, scheme: dict) 
     ax.grid(color=scheme.get("grid", None))
 
 
-def plot_rsi(ax: Axes, rsi_data: pd.Series, params: Any, scheme: dict) -> None:
+def plot_rsi(
+    ax: Axes, rsi_data: pd.Series, params: Any, scheme: dict[str, str]
+) -> None:
     """
     Plot the RSI indicator on the axis.
     """
@@ -302,7 +306,7 @@ def plot_rsi(ax: Axes, rsi_data: pd.Series, params: Any, scheme: dict) -> None:
     ax.grid(color=scheme.get("grid", None))
 
 
-def plot_obv(ax: Axes, obv_data: pd.Series, scheme: dict) -> None:
+def plot_obv(ax: Axes, obv_data: pd.Series, scheme: dict[str, str]) -> None:
     """
     Plot the OBV indicator on the axis.
     """
@@ -318,7 +322,7 @@ def plot_obv(ax: Axes, obv_data: pd.Series, scheme: dict) -> None:
     ax.grid(color=scheme.get("grid", None))
 
 
-def plot_adx(ax: Axes, adx_data: pd.DataFrame, scheme: dict) -> None:
+def plot_adx(ax: Axes, adx_data: pd.DataFrame, scheme: dict[str, str]) -> None:
     """
     Plot the ADX indicator on the axis.
     """
@@ -352,7 +356,8 @@ def plot_adx(ax: Axes, adx_data: pd.DataFrame, scheme: dict) -> None:
 
 
 def analyze_indicators(
-    indicators: dict, is_multi_ticker: bool = False
+    indicators: dict[str, tuple[pd.DataFrame | pd.Series, list[int]]],
+    is_multi_ticker: bool = False,
 ) -> dict[str, int | bool]:
     """
     Analyze indicator presence and determine the number of subplots.

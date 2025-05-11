@@ -1,15 +1,21 @@
 import os
+import time
+import logging
 import requests
 import pandas as pd
+from requests.exceptions import RequestException
 from data_sources.base_source import BaseSource
+from cli.exceptions import DataSourceError
 
-
+logger = logging.getLogger("market-indicator-cli")
 class AlphavantageSource(BaseSource):
     """
     Data source implementation using alpha vantage API
     """
 
     BASE_URL = "https://www.alphavantage.co/query"
+    MAX_RETRIES = 3
+    BACKOFF_FACTOR = 2
 
     def __init__(self, api_key: str = None) -> None:
         """
@@ -17,12 +23,9 @@ class AlphavantageSource(BaseSource):
         """
         self.api_key = api_key
         if not self.api_key:
-
-            self.api_key = os.environ.get("ALPHA_VANTAGE_API_KEY")
-            if not self.api_key:
-                raise ValueError(
-                    "AlphaVantage API key is required. Set it via constructor or ALHPA_VANTAGE_API_KEY environment variable."
-                )
+            raise ValueError(
+                "AlphaVantage API key is required. Set it via constructor or ALHPA_VANTAGE_API_KEY environment variable."
+            )
 
     def _map_interval(self, interval: str):
         interval_map = {
@@ -40,6 +43,32 @@ class AlphavantageSource(BaseSource):
                 f"Unsupported interval: {interval}. Supported intervals: {', '.join(interval_map.keys())}"
             )
         return interval_map[interval]
+    
+    def _request(self, params: dict) -> dict:
+        """Internal: perform HTTP request with retries and backoff."""
+        for attempt in range(1, self.MAX_RETRIES + 1):
+            try:
+                response = requests.get(self.BASE_URL, params=params, timeout=(5, 20))
+                response.raise_for_status()
+                data = response.json()
+            except RequestException as e:
+                logger.warning("HTTP error on attempt %d: %s", attempt, e)
+                if attempt == self.MAX_RETRIES:
+                    raise DataSourceError("Network error contacting Alpha Vantage") from e
+                time.sleep(self.BACKOFF_FACTOR ** (attempt - 1))
+            except ValueError as e:
+                raise DataSourceError("Invalid JSON in Alpha Vantage response") from e
+            
+            if "Error Message" in data:
+                raise DataSourceError(f"Alpha Vantage API error: {data["Error Message"]}")
+            if "Note" in data:
+                logger.info("Rate limit reached: %s", data["Note"])
+                if attempt == self.MAX_RETRIES:
+                    raise DataSourceError(f"Rate limit exceeded: {data["Note"]}")
+                time.sleep(self.BACKOFF_FACTOR ** (attempt - 1))
+                continue
+            return data
+        raise DataSourceError("Exceeded retries without success")
 
     def fetch_data(
         self, ticker: str, start_date: str, end_date: str, interval: str
@@ -75,25 +104,20 @@ class AlphavantageSource(BaseSource):
             }
             time_series_key = f"Time Series ({function.split('_')[-1].capitalize()})"
 
-        response = requests.get(self.BASE_URL, params=params, timeout=(5, 20))
-        if response.status_code != 200:
-            raise Exception(
-                f"API request failed with status code {response.status_code}: {response.text}"
-            )
-
-        data = response.json()
-
-        if "Error Message" in data:
-            raise Exception(f"API error: {data['Error Message']}")
+        try:
+            data = self._request(params)
+        except DataSourceError:
+            raise
+        except Exception as e:
+            raise DataSourceError("Unexpected error in AlphaVantage")
 
         if time_series_key not in data:
             available_keys = list(data.keys())
-            raise Exception(
+            raise DataSourceError(
                 f"Expected key '{time_series_key}' not found in response. Available keys: {available_keys}"
             )
 
         time_series = data[time_series_key]
-
         df = pd.DataFrame.from_dict(time_series, orient="index")
 
         df.columns = [col.split(". ")[1] if ". " in col else col for col in df.columns]

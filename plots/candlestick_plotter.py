@@ -109,7 +109,7 @@ class CandlestickPlotter:
     def plot(
         self,
         data: pd.DataFrame,
-        indicators: dict,
+        indicators: dict[str, tuple[pd.DataFrame | pd.Series, list[int]]],
         column: str = "Close",  # do usunięcia
         ticker: str = "Unknown",
         save: bool = False,
@@ -119,7 +119,6 @@ class CandlestickPlotter:
         interval: str = None,
         start_date: str = None,
         end_date: str = None,
-        interactive: bool = False,
     ) -> None:
         required_columns = ["Open", "High", "Low", "Close"]
         if not all(col in data.columns for col in required_columns):
@@ -157,8 +156,8 @@ class CandlestickPlotter:
             ax_price.plot(series.index, series, label=f"{name}", linewidth=1.5)
         if indicators_info["has_bbands"]:
             bbands_key = next(name for name in indicators if "BBANDS" in name)
-            bbands_data, params = indicators[bbands_key]
-            plot_bbands(ax_price, bbands_data, params, self.scheme)
+            bbands_data, _ = indicators[bbands_key]
+            plot_bbands(ax_price, bbands_data, self.scheme)
         if indicators_info["has_fibo"]:
             fibo_key = next(name for name in indicators if name.startswith("FIBO"))
             fibo_data, _ = indicators[fibo_key]

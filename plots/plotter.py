@@ -31,7 +31,7 @@ class Plotter:
         color_scheme: str = "default",
         up_color: str = None,
         down_color: str = None,
-    ):
+    ) -> None:
         """
         Initialize the Plotter with title and color scheme.
         """
@@ -41,7 +41,7 @@ class Plotter:
     def plot(
         self,
         data: pd.DataFrame,
-        indicators: dict,
+        indicators: dict[str, tuple[pd.DataFrame | pd.Series, list[int]]],
         column: str = "Close",
         ticker: str = "Unknown",
         save: bool = False,
