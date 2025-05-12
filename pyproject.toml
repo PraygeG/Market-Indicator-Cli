@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "your_app"
+version = "0.1.0"
+description = "Market price and indicator plotter."
+readme = "README.md"
+requires-python = ">=3.13.3"
+license = { text = "MIT" }
+
+authors = [
+  { name = "Your Name", email = "your@email.com" }
+]
+
+dependencies = []
+
+# Entry point to run with `your-app` from terminal
+[project.scripts]
+your-app = "Market-Indicator-Cli.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["your_app*"]

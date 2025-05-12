@@ -1,0 +1,28 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+requests = "*"
+pandas = "*"
+numpy = "*"
+click = "*"
+matplotlib = "*"
+mplcursors = "*"
+yfinance = "*"
+pyyaml = "*"
+pydantic = "*"
+
+[dev-packages]
+black = "*"
+pylint = "*"
+pytest = "*"
+pytest-cov = "*"
+flake8 = "*"
+build = "*"
+wheel = "*"
+setuptools = "*"
+
+[requires]
+python_version = "3.13"
