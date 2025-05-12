@@ -110,7 +110,7 @@ class CandlestickPlotter:
         self,
         data: pd.DataFrame,
         indicators: dict[str, tuple[pd.DataFrame | pd.Series, list[int]]],
-        column: str = "Close",  # do usunięcia
+        _,
         ticker: str = "Unknown",
         save: bool = False,
         save_dir: str = None,

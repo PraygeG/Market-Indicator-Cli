@@ -1,3 +1,6 @@
+"Config model and validation module."
+
+import time
 from datetime import date, datetime
 from typing import List, Tuple, Optional, Dict, Any, Union
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
@@ -72,8 +75,7 @@ supported_indicators = {
 
 
 def validate_tickers(tickers_str: str) -> list[str]:
-    import time
-
+    """Validate tickers by pinging yfinance for ticker info."""
     if not tickers_str:
         raise ValueError("No tickers provided.")
 
@@ -118,49 +120,10 @@ def validate_date(date: str) -> str:
         raise ValueError("Invalid date format. Please use YYYY-MM-DD")
 
 
-def validate_date_range(start_date: str, end_date: str) -> None:
-    try:
-        start = datetime.strptime(start_date, "%Y-%m-%d")
-        end = datetime.strptime(end_date, "%Y-%m-%d")
-    except ValueError:
-        raise ValueError("Invalid date format. Please use YYYY-MM-DD")
-    if start > end:
-        raise ValueError("Start date cannot be after the end date.")
-
-
 def validate_interval(interval: str) -> str:
     if interval in valid_intervals:
         return interval
     raise ValueError("Invalid interval. Try again.")
-
-
-def parse_indicators(indicator_str: str) -> list[tuple[str, list[int | float]]]:
-    """Parse indicator string to list of (name, parameters) tuples."""
-    if not indicator_str:
-        return []
-
-    result = []
-    pairs = indicator_str.split(",")
-    for pair in pairs:
-        if ":" not in pair:
-            name = pair.strip().upper()
-            params: list[float | int] = []
-        else:
-            name, raw = pair.split(":", 1)
-            name = name.strip().upper()
-            raw = raw.strip()
-
-            parts = raw.split("-")
-            if name == "FIBO":
-                params = [float(p.strip()) for p in parts]
-            else:
-                params = [int(p.strip()) for p in parts]
-            # if name in {"MACD", "BBANDS"} and "-" in param:
-            #    params = [int(p.strip()) for p in param.split("-")]
-            # else:
-            #    params = [int(p.strip()) for p in param.split(",")]
-        result.append((name, params))
-    return result
 
 
 def validate_parsed_indicators(parsed_ind: list[tuple[str, list[int | float]]]):
@@ -279,6 +242,7 @@ class ConfigModel(BaseModel):
             parsed = []
             for part in raw_inds.split(","):
                 name, *param_str = part.split(":")
+                name = name.strip().upper()
                 if param_str:
                     p_str = param_str[0]
                     params = [float(p) for p in p_str.split("-")]
@@ -288,7 +252,10 @@ class ConfigModel(BaseModel):
             values["indicators"] = parsed
         elif isinstance(raw_inds, dict):
             values["indicators"] = [
-                {"name": name, "params": ([val] if not isinstance(val, list) else val)}
+                {
+                    "name": name.strip().upper(),
+                    "params": ([val] if not isinstance(val, list) else val),
+                }
                 for name, val in raw_inds.items()
             ]
         return values
@@ -308,10 +275,9 @@ class ConfigModel(BaseModel):
             param_strs: list[str] = []
             for p in ind.params:
                 if isinstance(p, float) and p.is_integer():
-                    param_strs.append(str(int(p)))
+                    param_strs.append(int(p))
                 else:
-                    param_strs.append(str(p))
-
+                    param_strs.append(p)
             validate_parsed_indicators([(ind.name, param_strs)])
         return v
 

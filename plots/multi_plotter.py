@@ -1,17 +1,14 @@
-from typing import Dict, Tuple, Optional, Sequence
+from typing import Dict, Tuple, Optional
+from functools import reduce
 import pandas as pd
 import matplotlib.pyplot as plt
-import mplcursors
-from plots.plot_methods import (
-    analyze_indicators,
-    assign_axes,
-    save_plot,
-)
+from plots.plot_methods import save_plot
 
 
 class MultiTickerPlotter:
     """
     Plot multiple tickers on the same axes, with optional normalization and log-scale.
+    Only price, FIBO (if normalized), and moving averages (SMA, EMA) are supported.
     """
 
     def __init__(
@@ -20,33 +17,93 @@ class MultiTickerPlotter:
         log_scale: bool = False,
         title: str = "Multi-Ticker Comparison",
     ) -> None:
-        """
-        Initialize the MultiTickerPlotter with normalization and log-scale options.
-        """
         self.normalize = normalize
         self.log_scale = log_scale
         self.title = title
 
-    def _normalize_series(self, series: pd.Series) -> pd.Series:
+    @staticmethod
+    def align_dataframes(
+        data: Dict[str, pd.DataFrame], column: str
+    ) -> Dict[str, pd.Series]:
         """
-        Normalize a pandas Series to its first value.
+        Align all ticker series to the intersection of their indexes.
+        Returns a dict of ticker -> pd.Series.
         """
-        if not series.empty:
-            first_valid = series.first_valid_index()
-            if first_valid is not None:
-                base_value = series.loc[first_valid]
-                if base_value != 0:
-                    return series / base_value
-        return series
+        indexes = [df[column].dropna().index for df in data.values()]
+        if not indexes:
+            common_index = pd.Index([])
+        else:
+            common_index = reduce(lambda a, b: a.intersection(b), indexes)
+        return {
+            ticker: df.loc[common_index, column].sort_index()
+            for ticker, df in data.items()
+        }
 
-    def _enable_hover(self, fig: plt.Figure, axes: Sequence[plt.Axes]) -> None:
+    @staticmethod
+    def get_base_values(series_dict: Dict[str, pd.Series]) -> Dict[str, float]:
         """
-        Enable hover tooltips on the plot axes if mplcursors is available.
+        Get the first valid value for each ticker's series.
         """
-        try:
-            mplcursors.cursor(axes, hover=True)
-        except Exception as e:
-            print("mplcursors not available for failed to initialize:", e)
+        return {
+            ticker: series.iloc[0] if not series.empty else 1.0
+            for ticker, series in series_dict.items()
+        }
+
+    @staticmethod
+    def normalize_series(series: pd.Series, base: float) -> pd.Series:
+        """
+        Normalize a pandas Series to its base value.
+        """
+        return series / base if base != 0 else series
+
+    @staticmethod
+    def normalize_and_average_fibo(
+        fibo_df: pd.DataFrame, base_values: Dict[str, float]
+    ) -> pd.Series:
+        """
+        Normalize FIBO levels for each ticker and average across tickers for each level.
+        Handles both (levels as rows, tickers as columns) and vice versa.
+        Returns: pd.Series with index as FIBO level and value as normalized average.
+        """
+        tickers = set(base_values.keys())
+        # Try columns first
+        fibo_cols = set(fibo_df.columns)
+        fibo_idx = set(fibo_df.index)
+        if tickers & fibo_cols:
+            common = list(tickers & fibo_cols)
+            norm = fibo_df[common].copy()
+            for ticker in common:
+                norm[ticker] = norm[ticker] / base_values[ticker]
+            return norm.mean(axis=1)
+        elif tickers & fibo_idx:
+            common = list(tickers & fibo_idx)
+            norm = fibo_df.loc[common].copy()
+            for ticker in common:
+                norm.loc[ticker] = norm.loc[ticker] / base_values[ticker]
+            return norm.mean(axis=0)
+        elif tickers & set(fibo_df.T.columns):
+            # Try transposed columns
+            fibo_df = fibo_df.T
+            common = list(tickers & set(fibo_df.columns))
+            norm = fibo_df[common].copy()
+            for ticker in common:
+                norm[ticker] = norm[ticker] / base_values[ticker]
+            return norm.mean(axis=1)
+        elif tickers & set(fibo_df.T.index):
+            # Try transposed index
+            fibo_df = fibo_df.T
+            common = list(tickers & set(fibo_df.index))
+            norm = fibo_df.loc[common].copy()
+            for ticker in common:
+                norm.loc[ticker] = norm.loc[ticker] / base_values[ticker]
+            return norm.mean(axis=0)
+        else:
+            raise ValueError(
+                f"FIBO DataFrame columns or index do not match tickers. "
+                f"Tickers in price: {tickers}, "
+                f"FIBO columns: {fibo_df.columns}, "
+                f"FIBO index: {fibo_df.index}"
+            )
 
     def plot(
         self,
@@ -62,21 +119,33 @@ class MultiTickerPlotter:
         figsize: Tuple[int, int] = (12, 6),
     ) -> None:
         """
-        Plot multiple tickers and their indicators. Optionally save or show interactively.
+        Plot normalized prices, FIBO overlays, and moving averages for multiple tickers.
         """
         if not data:
             raise ValueError("'data' must contain at least one ticker")
-
         for ticker, df in data.items():
             if column not in df.columns:
                 raise ValueError(f"DataFrame for {ticker!r} has no column {column!r}.")
 
-        # Price comparison plot
-        fig_price, ax_price = plt.subplots(1, 1, figsize=figsize)
-        for ticker, df in data.items():
-            series = df[column].sort_index()
-            if self.normalize:
-                series = self._normalize_series(series)
+        # --- Data alignment and normalization ---
+        price_series = self.align_dataframes(data, column)
+        base_values = self.get_base_values(price_series)
+        norm_prices = {
+            ticker: (
+                self.normalize_series(series, base_values[ticker])
+                if self.normalize
+                else series
+            )
+            for ticker, series in price_series.items()
+        }
+
+        # --- Figure setup ---
+        fig, (ax_price, ax_ma) = plt.subplots(
+            2, 1, figsize=figsize, sharex=True, gridspec_kw={"height_ratios": [2, 1]}
+        )
+
+        # --- Price subplot ---
+        for ticker, series in norm_prices.items():
             ax_price.plot(series.index, series, label=ticker, linewidth=1.5)
         ax_price.set_title(self.title)
         ax_price.set_ylabel(column + (" (normalized)" if self.normalize else ""))
@@ -84,82 +153,66 @@ class MultiTickerPlotter:
             ax_price.set_yscale("log")
         ax_price.grid(True)
         ax_price.legend(loc="upper left")
-        plt.tight_layout()
-        self._enable_hover(fig_price, [ax_price])
-        if save:
-            save_plot(fig_price, save_dir, save_format, save_dpi)
-        plt.show()
 
-        # Indicator plot
+        # --- FIBO overlay ---
         if indicators:
-            indicators_info = analyze_indicators(indicators, True)
-            subplot_count = indicators_info["subplot_count"]
-            fig_ind, axes = plt.subplots(
-                subplot_count,
-                1,
-                figsize=(figsize[0], figsize[1] * subplot_count),
-                sharex=True,
-            )
-            if subplot_count == 1:
-                axes = [axes]
-            ax_map = assign_axes(axes, indicators_info, True)
-
-            for ind_name, (ind_data, params) in indicators.items():
-                if "MACD" in ind_name and ax_map["macd"]:
-                    ax_to_use = ax_map["macd"]
-                elif ind_name.startswith("RSI") and ax_map["rsi"]:
-                    ax_to_use = ax_map["rsi"]
-                elif ind_name.startswith("OBV") and ax_map["obv"]:
-                    ax_to_use = ax_map["obv"]
-                elif ind_name.startswith("ADX") and ax_map["adx"]:
-                    ax_to_use = ax_map["adx"]
-                elif (
-                    ind_name.startswith("EMA") or ind_name.startswith("SMA")
-                ) and ax_map["ma"]:
-                    ax_to_use = ax_map["ma"]
-                else:
-                    continue
-
-                if ax_to_use:
+            for ind_name, (ind_data, _) in indicators.items():
+                if ind_name.startswith("FIBO") and self.normalize:
                     if isinstance(ind_data, pd.DataFrame):
-                        for ticker in data.keys():
+                        fibo_avg = self.normalize_and_average_fibo(
+                            ind_data, base_values
+                        )
+                        for level, value in fibo_avg.items():
+                            ax_price.axhline(
+                                y=value,
+                                linestyle="--",
+                                alpha=0.7,
+                                label=f"FIBO {level}",
+                            )
+                    elif isinstance(ind_data, pd.Series):
+                        mean_base = sum(base_values.values()) / len(base_values)
+                        for level, value in ind_data.items():
+                            ax_price.axhline(
+                                y=value / mean_base,
+                                linestyle="--",
+                                alpha=0.7,
+                                label=f"FIBO {level}",
+                            )
+            # Deduplicate legend
+            handles, labels = ax_price.get_legend_handles_labels()
+            unique = dict(zip(labels, handles))
+            ax_price.legend(unique.values(), unique.keys(), loc="upper left")
+
+        # --- Moving Averages subplot ---
+        ma_plotted = False
+        if indicators:
+            for ind_name, (ind_data, _) in indicators.items():
+                if ind_name.startswith("EMA") or ind_name.startswith("SMA"):
+                    if isinstance(ind_data, pd.DataFrame):
+                        for ticker, series in price_series.items():
                             if ticker in ind_data.columns:
-                                series = ind_data[ticker].sort_index()
-                                if self.normalize and not series.empty:
-                                    series = self._normalize_series(series)
-                                ax_to_use.plot(
-                                    series.index,
-                                    series,
-                                    label=f"{ticker}{ind_name}",
+                                ma_series = ind_data[ticker].reindex(series.index)
+                                if self.normalize:
+                                    ma_series = self.normalize_series(
+                                        ma_series, base_values[ticker]
+                                    )
+                                ax_ma.plot(
+                                    ma_series.index,
+                                    ma_series,
+                                    label=f"{ticker} {ind_name}",
                                     linewidth=1,
                                 )
-                    else:
-                        series = ind_data.sort_index()
-                        if self.normalize and not series.empty:
-                            series = self._normalize_series(series)
-                        ax_to_use.plot(
-                            series.index, series, label=ind_name, linewidth=1
-                        )
+                                ma_plotted = True
+        if ma_plotted:
+            ax_ma.set_title("Moving Averages")
+            ax_ma.set_ylabel("MA Value" + (" (normalized)" if self.normalize else ""))
+            ax_ma.grid(True)
+            ax_ma.legend(loc="upper left")
+        else:
+            ax_ma.set_visible(False)
 
-                    if ax_to_use != ax_map["price"]:
-                        ax_to_use.set_title(
-                            f"{ind_name}{' (normalized)' if self.normalize else ''}"
-                        )
-                        ax_to_use.set_ylabel(ind_name)
-
-                    if self.log_scale:
-                        values = ind_data.dropna().values
-                        all_positive = (
-                            (values > 0).all() if hasattr(values, "all") else True
-                        )
-                        if all_positive:
-                            ax_to_use.set_yscale("log")
-                    ax_to_use.grid(True)
-                    ax_to_use.legend(loc="upper left")
-
-            plt.tight_layout()
-            self._enable_hover(fig_ind, axes)
-            if save:
-                save_plot(fig_ind, save_dir, save_format, save_dpi)
-            else:
-                plt.show()
+        plt.tight_layout()
+        if save:
+            save_plot(fig, save_dir, save_format, save_dpi)
+        else:
+            plt.show()

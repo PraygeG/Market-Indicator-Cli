@@ -1,8 +1,8 @@
 from typing import Optional
 import time
 import pandas as pd
-from data_sources.yfinance_source import YfinanceSource
-from data_sources.alphavantage_source import AlphavantageSource
+from data_sources.yfinance import YfinanceSource
+from data_sources.alphavantage import AlphavantageSource
 from indicators.ema import EMA
 from indicators.sma import SMA
 from indicators.rsi import RSI
@@ -55,33 +55,25 @@ def run_multi_ticker_indicators(
     ticker_data: dict[str, pd.DataFrame],
     indicators: list[tuple[str, list[int | float]]],
     column: str = "Close",
+    normalize: bool = False,
 ) -> dict[str, tuple[pd.DataFrame | pd.Series, Optional[list[int]]]]:
+    """
+    Calculate indicators for multi-ticker plotting.
+    FIBO is only calculated and included if normalize=True.
+    """
     calculated = {}
-
+    filtered_indicators = []
+    for name, params in indicators:
+        if name == "FIBO" and not normalize:
+            continue
+        filtered_indicators.append((name, params))
     for name, params in indicators:
         indicator_class = INDICATOR_CLASSES.get(name)
         if not indicator_class:
             continue
-        if name == "OBV":
+        if name in ("SMA", "EMA"):
             result_df = pd.DataFrame()
             for ticker, data in ticker_data.items():
-                indicator = indicator_class(name)
-                series = indicator.calculate(data)
-                result_df[ticker] = series
-            calculated[name] = (result_df, params)
-
-        elif name == "ADX":
-            result_df = pd.DataFrame()
-            for ticker, data in ticker_data.items():
-                indicator = indicator_class(name, params)
-                series = indicator.calculate(data)
-                result_df[ticker] = series
-            calculated[f"{name}_{"_".join(map(str, params))}"] = (result_df, params)
-
-        else:
-            result_df = pd.DataFrame()
-            for ticker, data in ticker_data.items():
-                print(ticker)
                 indicator = indicator_class(*params, column=column)
                 series = indicator.calculate(data)
                 if isinstance(series, pd.Series):
@@ -94,7 +86,23 @@ def run_multi_ticker_indicators(
                         f"Unexpected output type from {name}: {type(series)}"
                     )
             calculated[f"{name}_{"_".join(map(str, params))}"] = (result_df, params)
-
+        elif name == "FIBO":
+            fibo_dfs = []
+            for ticker, data in ticker_data.items():
+                indicator = indicator_class(*params)
+                fibo_df = indicator.calculate(data)
+                # fibo_df: index = dates, columns = fib levels
+                # Take the first row (or last, or mean) for each ticker
+                # Here, take the first row (earliest date)
+                fibo_levels = fibo_df.iloc[0]
+                fibo_levels.name = ticker
+                fibo_dfs.append(fibo_levels)
+            if fibo_dfs:
+                all_levels = pd.concat(fibo_dfs, axis=1)
+                calculated[f"{name}_{'_'.join(map(str, params))}"] = (
+                    all_levels,
+                    params,
+                )
     return calculated
 
 

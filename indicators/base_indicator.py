@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 import pandas as pd
 
 
@@ -7,7 +8,7 @@ class BaseIndicator(ABC):
     Abstract base class for all technical indicators.
     """
 
-    def __init__(self, column: str = "Close") -> None:
+    def __init__(self, column: Optional[str]) -> None:
         """Initialize the base indicator."""
         self.column = column
 

@@ -3,6 +3,7 @@ import pandas as pd
 from data_sources.base_source import BaseSource
 from cli.exceptions import DataSourceError
 
+
 class YfinanceSource(BaseSource):
     """
     Data source implementation using yfinance.
@@ -27,4 +28,6 @@ class YfinanceSource(BaseSource):
             data = data.dropna()
             return data
         except Exception as e:
-            raise DataSourceError(f"Failed to fetch data for {ticker} from yfinance: {e}") from e
+            raise DataSourceError(
+                f"Failed to fetch data for {ticker} from yfinance: {e}"
+            ) from e

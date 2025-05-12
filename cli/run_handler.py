@@ -13,7 +13,13 @@ from cli.services import (
     plot_data,
     plot_multi,
 )
-from cli.exceptions import ConfigError, DataSourceError, IndicatorError, PlotError, ValidationError
+from cli.exceptions import (
+    ConfigError,
+    DataSourceError,
+    IndicatorError,
+    PlotError,
+    ValidationError,
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -63,6 +69,7 @@ def _build_config(config_file: str, **cli_overrides) -> Dict[str, Any]:
         logger.error("Failed to build configuration: %s", e, exc_info=True)
         raise ConfigError("Failed to build configuration") from e
 
+
 def _run_pipeline(config: dict[str, any]) -> None:
     try:
         all_data = fetch_all_data(
@@ -97,7 +104,9 @@ def _run_pipeline(config: dict[str, any]) -> None:
                 if data.empty:
                     print(f"No data found for {ticker}. Skipping...")
                     continue
-                indicators = run_indicators(data, config["indicators"], config["column"])
+                indicators = run_indicators(
+                    data, config["indicators"], config["column"]
+                )
                 plot_data(
                     data,
                     indicators,
@@ -114,7 +123,13 @@ def _run_pipeline(config: dict[str, any]) -> None:
                     start_date=config["start_date"],
                     end_date=config["end_date"],
                 )
-    except (DataSourceError, IndicatorError, PlotError, ValidationError, ConfigError) as e:
+    except (
+        DataSourceError,
+        IndicatorError,
+        PlotError,
+        ValidationError,
+        ConfigError,
+    ) as e:
         logger.error("Pipeline error: %s", e, exc_info=True)
         click.echo(f"Error: {e}", err=True)
         sys.exit(1)

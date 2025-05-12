@@ -8,6 +8,8 @@ from data_sources.base_source import BaseSource
 from cli.exceptions import DataSourceError
 
 logger = logging.getLogger("market-indicator-cli")
+
+
 class AlphavantageSource(BaseSource):
     """
     Data source implementation using alpha vantage API
@@ -24,7 +26,7 @@ class AlphavantageSource(BaseSource):
         self.api_key = api_key
         if not self.api_key:
             raise ValueError(
-                "AlphaVantage API key is required. Set it via constructor or ALHPA_VANTAGE_API_KEY environment variable."
+                "AlphaVantage API key is required. Set it via constructor or environment variable."
             )
 
     def _map_interval(self, interval: str):
@@ -43,7 +45,7 @@ class AlphavantageSource(BaseSource):
                 f"Unsupported interval: {interval}. Supported intervals: {', '.join(interval_map.keys())}"
             )
         return interval_map[interval]
-    
+
     def _request(self, params: dict) -> dict:
         """Internal: perform HTTP request with retries and backoff."""
         for attempt in range(1, self.MAX_RETRIES + 1):
@@ -54,25 +56,31 @@ class AlphavantageSource(BaseSource):
             except RequestException as e:
                 logger.warning("HTTP error on attempt %d: %s", attempt, e)
                 if attempt == self.MAX_RETRIES:
-                    raise DataSourceError("Network error contacting Alpha Vantage") from e
+                    raise DataSourceError(
+                        "Network error contacting Alpha Vantage"
+                    ) from e
                 time.sleep(self.BACKOFF_FACTOR ** (attempt - 1))
             except ValueError as e:
                 raise DataSourceError("Invalid JSON in Alpha Vantage response") from e
-            
+
             if "Error Message" in data:
-                raise DataSourceError(f"Alpha Vantage API error: {data["Error Message"]}")
+                raise DataSourceError(
+                    f"Alpha Vantage API error: {data["Error Message"]}"
+                )
             if "Note" in data:
                 logger.info("Rate limit reached: %s", data["Note"])
                 if attempt == self.MAX_RETRIES:
                     raise DataSourceError(f"Rate limit exceeded: {data["Note"]}")
                 time.sleep(self.BACKOFF_FACTOR ** (attempt - 1))
                 continue
+            print(data)
             return data
         raise DataSourceError("Exceeded retries without success")
 
     def fetch_data(
         self, ticker: str, start_date: str, end_date: str, interval: str
     ) -> pd.DataFrame:
+        """Fetch data using alphavantage."""
         print(
             f"Fetching data for {ticker} from {start_date} to {end_date} using AlphaVantage"
         )

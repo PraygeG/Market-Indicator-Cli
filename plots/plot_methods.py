@@ -1,3 +1,5 @@
+"""Plot methods reused throughout the plotters."""
+
 import os
 from datetime import datetime
 from typing import Any, Dict, Optional, Sequence, Tuple, List
@@ -64,53 +66,13 @@ def apply_color_scheme(
 def resolve_color_scheme(
     color_scheme: str, up_color: Optional[str] = None, down_color: Optional[str] = None
 ) -> Dict[str, str]:
+    """Determine which color to use."""
     scheme = COLOR_SCHEMES.get(color_scheme, COLOR_SCHEMES["default"]).copy()
     if up_color and up_color.lower() != "none":
         scheme["up"] and up_color
     if down_color and down_color.lower() != "none":
         scheme["down"] = down_color
     return scheme
-
-
-def _plot_lines(
-    ax: Axes,
-    data: pd.DataFrame,
-    scheme: Dict[str, str],
-    *,
-    key_order: Optional[list[str]] = None,
-    ylabel: Optional[str] = None,
-    title: Optional[str] = None,
-    linewidth: float = 1.0,
-    linestyle: str = "--",
-    alpha: float = 0.8,
-    legend: bool = True,
-    grid: bool = True,
-    grid_style: str = ":",
-    **plot_kwargs,
-) -> None:
-    """
-    Plot multiple lines on the given axis.
-    """
-    cols = key_order or list(data.columns)
-    for col in cols:
-        color = scheme.get(col, scheme.get("up", "green"))
-        ax.plot(
-            data.index,
-            data[col],
-            label=col,
-            color=color,
-            linewidth=linewidth,
-            linestyle=linestyle,
-            alpha=alpha,
-        )
-    if ylabel:
-        ax.set_ylabel(ylabel)
-    if title:
-        ax.set_title(title)
-    if legend:
-        ax.legend(loc="best")
-    if grid:
-        ax.grid(color=scheme.get("grid", None), linestyle=grid_style)
 
 
 def create_indicator_subplots(
