@@ -18,7 +18,7 @@ column: "Close"
 # Indicator Settings
 # Comma-separated list: INDICATOR_NAME:param1-param2,OTHER_INDICATOR:param
 # Example: "RSI:14,EMA:50,SMA:100,MACD:12-26-9,BBANDS:20-2,FIBO:0.236-0.382-0.5-0.618"
-indicators: "FIBO:0.236-0.382-0.5-0.618,ADX:14,EMA:7,EMA:14"
+indicators: "FIBO:0.236-0.382-0.5-0.618,ADX:14,EMA:7,EMA:14,MACD:12-26-9"
 
 # Plotting Options
 plot_style: "candlestick" # line or candlestick
