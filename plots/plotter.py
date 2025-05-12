@@ -1,10 +1,7 @@
-import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
-from matplotlib.figure import Figure
 import pandas as pd
 from plots.plot_methods import (
-    COLOR_SCHEMES,
     apply_color_scheme,
     resolve_color_scheme,
     create_indicator_subplots,

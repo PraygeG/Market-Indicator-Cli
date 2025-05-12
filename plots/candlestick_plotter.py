@@ -4,7 +4,6 @@ import matplotlib.dates as mdates
 from matplotlib.patches import Rectangle
 from matplotlib.axes import Axes
 from plots.plot_methods import (
-    COLOR_SCHEMES,
     apply_color_scheme,
     resolve_color_scheme,
     create_indicator_subplots,
@@ -123,7 +122,7 @@ class CandlestickPlotter:
         required_columns = ["Open", "High", "Low", "Close"]
         if not all(col in data.columns for col in required_columns):
             raise ValueError(
-                f"DataFrame must contain a OHLC columns for candlestick chart."
+                "DataFrame must contain a OHLC columns for candlestick chart."
             )
 
         indicators_info = analyze_indicators(indicators)

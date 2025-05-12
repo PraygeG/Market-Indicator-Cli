@@ -14,9 +14,9 @@ class OBV(BaseIndicator):
     def calculate(self, data: pd.DataFrame) -> pd.Series:
         """Calculate the OBV indicator."""
         if "Close" not in data.columns:
-            raise ValueError(f"DataFrame must contain a 'Close' column")
+            raise ValueError("DataFrame must contain a 'Close' column")
         if "Volume" not in data.columns:
-            raise ValueError(f"DataFrame must contain a 'Volume' column")
+            raise ValueError("DataFrame must contain a 'Volume' column")
 
         direction = data["Close"].diff().fillna(0)
         direction = (direction > 0).astype(int) - (direction < 0).astype(int)

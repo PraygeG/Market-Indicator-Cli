@@ -29,7 +29,7 @@ class ADX(BaseIndicator):
         data = data.copy()
         required_columns: list[str] = ["High", "Low", "Close"]
         if not all(col in data.columns for col in required_columns):
-            raise ValueError(f"DataFrame is missing columns for adx calculation.")
+            raise ValueError("DataFrame is missing columns for adx calculation.")
 
         high: pd.Series = data["High"]
         low: pd.Series = data["Low"]

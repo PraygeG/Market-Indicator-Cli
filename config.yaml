@@ -25,11 +25,10 @@ plot_style: "candlestick" # line or candlestick
 color_scheme: "tradingview" # default, monochrome, tradingview, dark
 # up_color: "green"         # Optional: Custom up color
 # down_color: "red"         # Optional: Custom down color
-#interactive: true           # Enable interactive plot
 
 # Multi-Plot Options (if applicable)
-multi_plot: True          # Plot all tickers on the same plot
-normalize: True           # Normalize data for multi-plot
+multi_plot: false          # Plot all tickers on the same plot
+normalize: false           # Normalize data for multi-plot
 log_scale: false           # Use logarithmic scale for multi-plot
 
 # Saving Options

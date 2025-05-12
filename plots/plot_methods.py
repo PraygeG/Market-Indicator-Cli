@@ -1,13 +1,12 @@
 """Plot methods reused throughout the plotters."""
 
 import os
-from datetime import datetime
+from datetime import datetime, date
 from typing import Any, Dict, Optional, Sequence, Tuple, List
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 import matplotlib.pyplot as plt
 import pandas as pd
-import numpy as np
 
 COLOR_SCHEMES = {
     "default": {
@@ -412,8 +411,6 @@ def save_plot(
     """
     Save the plot to a file.
     """
-    import os
-    from datetime import datetime, date
 
     def _fmt(d):
         if isinstance(d, (date, datetime)):

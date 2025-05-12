@@ -70,7 +70,7 @@ def _build_config(config_file: str, **cli_overrides) -> Dict[str, Any]:
         raise ConfigError("Failed to build configuration") from e
 
 
-def _run_pipeline(config: dict[str, any]) -> None:
+def _run_pipeline(config: dict[str, Any]) -> None:
     try:
         all_data = fetch_all_data(
             tickers=config["tickers"],
@@ -154,9 +154,6 @@ def run_command(**kwargs):
     try:
         config_file = kwargs.get("config_file")
         if config_file:
-            cli_overrides = {
-                k: v for k, v in kwargs.items() if v is not None and k != "config_file"
-            }
             config_model = _build_config(config_file)
             config = config_model.model_dump()
             config["indicators"] = config_model.tuples()
