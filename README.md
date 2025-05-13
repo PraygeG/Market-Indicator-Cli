@@ -43,19 +43,11 @@ appname [args]
 ```
 To get help with argument and get access to examples use help argument:
 ```bash
-python -m app.main --help     OR     appname --help
+python -m stonkzilla.main --help     OR     stonkzilla --help
 ```
 ## Reccommended usage
 The tool supports running from YAML config file, which is highly recommended to avoid typing in the same arguments over and over after you'll find your favourite set of settings, this way is also better for plotting larger amount of charts.   
 The tool supports automatic plot saving to specified directory, in specified format, in specified DPI if raster format was chosen.
-
-
-## Contributing
-
-Pull requests are welcome. For major changes, please open an issue first
-to discuss what you would like to change.
-
-Please make sure to update tests as appropriate.
 
 ## License
 
