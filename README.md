@@ -18,7 +18,7 @@ Oscilating indicators:
 When entering indicators either in config.yaml or in terminal, use the same format:
 **INDICATOR_NAME:PARAMS**    
 if indicator takes more than one parameters the next parameters are supposed to
-be enetered spaced with dashes:
+be enetered spaced with dashes:      
 **INDICATOR_NAME:PARAMS-PARAMS2-...**
 
 ## Installation
