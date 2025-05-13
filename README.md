@@ -30,7 +30,7 @@ pip install stonkzilla
 ```
 Or clone the repo and install dependecies:
 ```bash
-git clone <link>
+git clone https://github.com/PraygeG/Market-Indicator-Cli.git
 cd directory
 pip install -r requirements.txt
 ```
