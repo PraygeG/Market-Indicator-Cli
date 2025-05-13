@@ -47,7 +47,7 @@ or if you decided to pip install:
 ```bash
 stonkzilla [args]
 ```
-To get help with argument and get access to examples use help argument:
+**To get help with argument and get access to examples use help argument:**
 ```bash
 python -m stonkzilla.main --help  OR  stonkzilla --help
 ```
