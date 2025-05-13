@@ -1,6 +1,6 @@
-# Plotstonks CLI
+# STONKZILLA CLI
 
-Plotstonks CLI is a Python cli tool that allows to plot stock price data and a set of supported indicators.  
+STONKZILLA CLI is a Python cli tool that allows to plot stock price data and a set of supported indicators.  
 Data for calculations and plotting is sourced from yfinance API by default or AlphaVantage (free, requires API key) if configured.     
 The stock price data can be plot using lines or candlesticks. Indicators that generally have values close to prices are being plot on the price subplot, oscillators/momentum indicators get separate subplots for good readability.   
 Supported indicators:    
