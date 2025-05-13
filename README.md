@@ -16,7 +16,7 @@ Oscilating indicators:
 3. Moving Average Convergence Divergence (MACD)
 
 When entering indicators either in config.yaml or in terminal, use the same format:
-**INDICATOR_NAME:PARAMS**
+**INDICATOR_NAME:PARAMS**    
 if indicator takes more than one parameters the next parameters are supposed to
 be enetered spaced with dashes:
 **INDICATOR_NAME:PARAMS-PARAMS2-...**
