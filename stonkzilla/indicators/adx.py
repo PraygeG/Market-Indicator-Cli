@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from indicators.base_indicator import BaseIndicator
+from stonkzilla.indicators.base_indicator import BaseIndicator
 
 
 class ADX(BaseIndicator):

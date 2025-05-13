@@ -4,16 +4,16 @@ import logging
 from typing import Optional, Any, Dict
 import yaml
 import click
-from cli.config_model import ConfigModel, build_config_interactive
-from cli.options import common_options
-from cli.services import (
+from stonkzilla.cli.config_model import ConfigModel, build_config_interactive
+from stonkzilla.cli.options import common_options
+from stonkzilla.cli.services import (
     fetch_all_data,
     run_indicators,
     run_multi_ticker_indicators,
     plot_data,
     plot_multi,
 )
-from cli.exceptions import (
+from stonkzilla.cli.exceptions import (
     ConfigError,
     DataSourceError,
     IndicatorError,

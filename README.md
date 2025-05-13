@@ -6,8 +6,8 @@ The stock price data can be plot using lines or candlesticks. Indicators that ge
 Supported indicators:    
 1. Simple moving average (SMA),   
 2. Exponential moving average (EMA),    
-3. Bollinger Bands,
-4. Fibonacci Retracements,   
+3. Bollinger Bands (BBANDS),
+4. Fibonacci Retracements (FIBO),   
 5. On-Balance Volume (OBV),
 
 Oscilating indicators:
@@ -15,12 +15,18 @@ Oscilating indicators:
 2. Average Directional Index (ADX),
 3. Moving Average Convergence Divergence (MACD)
 
+When entering indicators either in config.yaml or in terminal, use the same format:
+==INDICATOR_NAME:PARAMS==
+if indicator takes more than one parameters the next parameters are supposed to
+be enetered spaced with dashes:
+==INDICATOR_NAME:PARAMS-PARAMS2-...==
+
 ## Installation
 
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install foobar.
 
 ```bash
-pip install foobar
+pip install stonkzilla
 ```
 Or clone the repo and install dependecies:
 ```bash
@@ -35,11 +41,11 @@ You'll be prompted to enter comma-separated list of tickers, start date, end dat
 
 If you decided to clone the repo:
 ```bash
-python -m app.main [args]
+python -m stonkzilla.main [args]
 ```
 or if you decided to pip install:
 ```bash
-appname [args]
+stonkzilla [args]
 ```
 To get help with argument and get access to examples use help argument:
 ```bash

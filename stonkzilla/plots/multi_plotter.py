@@ -2,7 +2,7 @@ from typing import Dict, Tuple, Optional
 from functools import reduce
 import pandas as pd
 import matplotlib.pyplot as plt
-from plots.plot_methods import save_plot
+from stonkzilla.plots.plot_methods import save_plot
 
 
 class MultiTickerPlotter:

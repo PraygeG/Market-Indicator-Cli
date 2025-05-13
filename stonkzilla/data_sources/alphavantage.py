@@ -1,10 +1,10 @@
 import time
 import logging
 import requests
-import pandas as pd
 from requests.exceptions import RequestException
-from data_sources.base_source import BaseSource
-from cli.exceptions import DataSourceError
+import pandas as pd
+from stonkzilla.data_sources.base_source import BaseSource
+from stonkzilla.cli.exceptions import DataSourceError
 
 logger = logging.getLogger("market-indicator-cli")
 

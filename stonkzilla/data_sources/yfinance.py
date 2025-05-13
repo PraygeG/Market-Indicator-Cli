@@ -1,7 +1,7 @@
 import yfinance as yf
 import pandas as pd
-from data_sources.base_source import BaseSource
-from cli.exceptions import DataSourceError
+from stonkzilla.data_sources.base_source import BaseSource
+from stonkzilla.cli.exceptions import DataSourceError
 
 
 class YfinanceSource(BaseSource):

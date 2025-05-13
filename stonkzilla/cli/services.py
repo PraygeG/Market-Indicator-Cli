@@ -1,19 +1,19 @@
 from typing import Optional
 import time
 import pandas as pd
-from data_sources.yfinance import YfinanceSource
-from data_sources.alphavantage import AlphavantageSource
-from indicators.ema import EMA
-from indicators.sma import SMA
-from indicators.rsi import RSI
-from indicators.bbands import BBANDS
-from indicators.macd import MACD
-from indicators.obv import OBV
-from indicators.adx import ADX
-from indicators.fibonacci_retracement import FibonacciRetracement as FIBO
-from plots.plotter import Plotter
-from plots.candlestick_plotter import CandlestickPlotter
-from plots.multi_plotter import MultiTickerPlotter
+from stonkzilla.data_sources.yfinance import YfinanceSource
+from stonkzilla.data_sources.alphavantage import AlphavantageSource
+from stonkzilla.indicators.ema import EMA
+from stonkzilla.indicators.sma import SMA
+from stonkzilla.indicators.rsi import RSI
+from stonkzilla.indicators.bbands import BBANDS
+from stonkzilla.indicators.macd import MACD
+from stonkzilla.indicators.obv import OBV
+from stonkzilla.indicators.adx import ADX
+from stonkzilla.indicators.fibonacci_retracement import FibonacciRetracement as FIBO
+from stonkzilla.plots.plotter import Plotter
+from stonkzilla.plots.candlestick_plotter import CandlestickPlotter
+from stonkzilla.plots.multi_plotter import MultiTickerPlotter
 
 INDICATOR_CLASSES = {
     "EMA": EMA,

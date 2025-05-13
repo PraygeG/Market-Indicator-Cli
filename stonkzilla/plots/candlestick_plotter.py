@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.dates as mdates
 from matplotlib.patches import Rectangle
 from matplotlib.axes import Axes
-from plots.plot_methods import (
+from stonkzilla.plots.plot_methods import (
     apply_color_scheme,
     resolve_color_scheme,
     create_indicator_subplots,

@@ -1,5 +1,6 @@
-from indicators.base_indicator import BaseIndicator
 import pandas as pd
+from stonkzilla.indicators.base_indicator import BaseIndicator
+
 
 
 class FibonacciRetracement(BaseIndicator):
