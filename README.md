@@ -49,7 +49,7 @@ stonkzilla [args]
 ```
 To get help with argument and get access to examples use help argument:
 ```bash
-python -m stonkzilla.main --help     OR     stonkzilla --help
+python -m stonkzilla.main --help  OR  stonkzilla --help
 ```
 ## Reccommended usage
 The tool supports running from YAML config file, which is highly recommended to avoid typing in the same arguments over and over after you'll find your favourite set of settings, this way is also better for plotting larger amount of charts.   
