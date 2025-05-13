@@ -8,17 +8,18 @@ start_date: "2024-01-01"   # Start date (YYYY-MM-DD)
 end_date: "2024-03-03"     # End date (YYYY-MM-DD)
 # Data interval
 # Valid: 1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo
-interval: "1d"             # Data interval (e.g., 1m, 5m, 1h, 1d, 1wk)
+# keep in mind that longer periods won't accept intraday intervals
+interval: "1d"
 # Data source settings
 data_source: "yfinance"    # yfinance or alphavantage
 api_key: "" # Only needed if data_source is alphavantage
-# Column to use for calculations (for SMA and EMA)
+# Column to use for price data and SMA/EMA/BBANDS calculation.
 column: "Close"
 
 # Indicator Settings
 # Comma-separated list: INDICATOR_NAME:param1-param2,OTHER_INDICATOR:param
 # Example: "RSI:14,EMA:50,SMA:100,MACD:12-26-9,BBANDS:20-2,FIBO:0.236-0.382-0.5-0.618"
-indicators: "FIBO:0.236-0.382-0.5-0.618,ADX:14,EMA:7,EMA:14,MACD:12-26-9"
+indicators: "EMA:14,SMA:14,MACD:12-26-9"
 
 # Plotting Options
 plot_style: "candlestick" # line or candlestick
@@ -27,11 +28,15 @@ color_scheme: "tradingview" # default, monochrome, tradingview, dark
 # down_color: "red"         # Optional: Custom down color
 
 # Multi-Plot Options (if applicable)
+# Plot multiple tickers on the same chart, only EMA and SMA works in this case
+# and they get dedicated subplot, you can normalize the data to allow easier comparison
 multi_plot: false          # Plot all tickers on the same plot
 normalize: false           # Normalize data for multi-plot
 log_scale: false           # Use logarithmic scale for multi-plot
 
 # Saving Options
+# To set uncomment the options, settings save to True results in plots
+# not showing on the screen, instead they're saved after being generated.
 #save: True                 # Save the plot(s) to file automatically
 #save_dir: "./plots_output" # Directory to save plots
 #save_format: "png"         # Format: png, pdf, svg, jpg

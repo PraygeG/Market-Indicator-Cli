@@ -369,7 +369,7 @@ def assign_axes(
         ax_map["ma"] = axes[current_index]
         current_index += 1
     else:
-        ax_map["ma"] = ax_map["price"]  # Use price chart for MAs in single ticker mode
+        ax_map["ma"] = ax_map["price"]
 
     if indicators_info.get("has_obv"):
         ax_map["obv"] = axes[current_index]
@@ -436,10 +436,6 @@ def save_plot(
         components.append(start_str)
     if end_str:
         components.append(end_str)
-    # if start_date:
-    #    components.append(start_date.replace("-", ""))
-    # if end_date:
-    #    components.append(end_date.replace("-", ""))
     if not components:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         components.append(f"plot_{timestamp}")
