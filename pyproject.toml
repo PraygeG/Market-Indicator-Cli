@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "STONKZILLA"
-version = "0.1.1"
+version = "0.1.5"
 description = "Market price and indicator plotter."
 readme = "README.md"
 requires-python = ">=3.13.3"
@@ -63,6 +63,7 @@ authors = [
 stonkzilla = "stonkzilla.main:main"
 
 [tool.setuptools]
+include-package-data = true
 packages = [
   "stonkzilla",
   "stonkzilla.cli",
@@ -70,6 +71,8 @@ packages = [
   "stonkzilla.plots",
   "stonkzilla.indicators"
   ]
+[tool.setuptools.package-data]
+"stonkzilla" = ["config.yaml"]
 
 
 [tool.setuptools.package-dir]

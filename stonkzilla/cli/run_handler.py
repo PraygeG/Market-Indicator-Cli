@@ -2,6 +2,8 @@ import os
 import sys
 import logging
 from typing import Optional, Any, Dict
+import importlib.resources
+from pathlib import Path
 import yaml
 import click
 from stonkzilla.cli.config_model import ConfigModel, build_config_interactive
@@ -28,33 +30,46 @@ logging.basicConfig(
 )
 logger = logging.getLogger("market-indicator-cli")
 
+def resolve_path(path: str, base_dir: str = None) -> str:
+    if not path:
+        return None
+    if os.path.isabs(path):
+        return path
+    return os.path.abspath(os.path.join(base_dir or "", path))
+
 
 def load_config(config_file_path: Optional[str]) -> dict[str, Any]:
-    if not config_file_path:
-        return {}
+    if config_file_path:
+        abs_path = os.path.abspath(config_file_path)
+        if os.path.exists(abs_path):
+            chosen = Path(abs_path)
+        else:
+            click.echo(f"Warning: {abs_path!r} not found; using built-in config", err=True)
+            chosen = None
+    else:
+        chosen = None
 
-    if not os.path.exists(config_file_path):
-        raise ConfigError(f"Configuration file not found: {config_file_path}")
+    if chosen is None:
+        pkg_file = importlib.resources.files("stonkzilla").joinpath("config.yaml")
+        with importlib.resources.as_file(pkg_file) as fp:
+            chosen = fp
 
     try:
-        with open(config_file_path, "r", encoding="utf-8") as f:
-            config_data = yaml.safe_load(f)
-        if config_data is None:
-            return {}
-        if not isinstance(config_data, dict):
-            raise ConfigError(
-                f"Configuration file {config_file_path} must contain a dictionary at the top level."
-            )
-        return config_data
+        with open(chosen, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f) or {}
     except yaml.YAMLError as e:
-        error_context = ""
-        if hasattr(e, "problem_mark") and e.problem_mark is not None:
-            error_context = f" at line {e.problem_mark.line + 1}, column {e.problem_mark.column + 1}"
-        raise ConfigError(
-            f"Error parsing YAML configuration file {config_file_path}{error_context}: {e}"
-        )
+        mark = getattr(e, "problem_mark", None)
+        ctx = f" at line {mark.line+1}, col {mark.column+1}" if mark else ""
+        raise ConfigError(f"YAML parse error{ctx}: {e}")
     except Exception as e:
-        raise ConfigError(f"Could not load configuration file {config_file_path}: {e}")
+        raise ConfigError(f"Could not open config file {chosen!r}: {e}")
+    
+    if not isinstance(data, dict):
+        raise ConfigError("Top-level of config must be a mapping/dict")
+    base_dir = chosen.parent
+    if "save_dir" in data:
+        data["save_dir"] = resolve_path(data["save_dir"], str(base_dir))
+    return data
 
 
 def _build_config(config_file: str, **cli_overrides) -> Dict[str, Any]:
@@ -144,7 +159,7 @@ def _run_pipeline(config: dict[str, Any]) -> None:
 @click.option(
     "--config-file",
     "-c",
-    type=click.Path(exists=True),
+    type=click.Path(dir_okay=False, file_okay=True),
     help="Path to YAML configuration file",
 )
 def run_command(**kwargs):

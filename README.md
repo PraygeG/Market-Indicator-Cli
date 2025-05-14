@@ -15,7 +15,7 @@ Oscilating indicators:
 2. Average Directional Index (ADX),
 3. Moving Average Convergence Divergence (MACD)
 
-When entering indicators either in config.yaml or in terminal, use the same format:
+When entering indicators either in config.yaml or in terminal, use the same format:   
 **INDICATOR_NAME:PARAMS**    
 if indicator takes more than one parameters the next parameters are supposed to
 be enetered spaced with dashes:      
@@ -47,13 +47,16 @@ or if you decided to pip install:
 ```bash
 stonkzilla [args]
 ```
-**To get help with argument and get access to examples use help argument:**
+**To get help with arguments and get access to examples use help argument:**
 ```bash
 python -m stonkzilla.main --help  OR  stonkzilla --help
 ```
 ## Reccommended usage
 The tool supports running from YAML config file, which is highly recommended to avoid typing in the same arguments over and over after you'll find your favourite set of settings, this way is also better for plotting larger amount of charts.   
-The tool supports automatic plot saving to specified directory, in specified format, in specified DPI if raster format was chosen.
+The tool supports automatic plot saving to specified directory, in specified format, in specified DPI if raster format was chosen. Example config file with helping will always be in the package directory no matter which way you decide to install. If the path isn't recognized when config mode is on, the program will fall back to the default config file inside a package directory:
+```bash
+stonkzilla -c <config_path> or python -m stonkzilla.main -c <config_path>
+```
 
 ## License
 
