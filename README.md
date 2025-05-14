@@ -2,7 +2,7 @@
 
 STONKZILLA CLI is a Python cli tool that allows to plot stock price data and a set of supported indicators.  
 Data for calculations and plotting is sourced from yfinance API by default or AlphaVantage (free, requires API key) if configured.     
-The stock price data can be plot using lines or candlesticks. Indicators that generally have values close to prices are being plot on the price subplot, oscillators/momentum indicators get separate subplots for good readability.   
+The stock price data can be plotted using lines or candlesticks. Indicators that generally have values close to prices are being plot on the price subplot, oscillators/momentum indicators get separate subplots for good readability.   
 Supported indicators:    
 1. Simple moving average (SMA),   
 2. Exponential moving average (EMA),    
@@ -17,13 +17,13 @@ Oscilating indicators:
 
 When entering indicators either in config.yaml or in terminal, use the same format:   
 **INDICATOR_NAME:PARAMS**    
-if indicator takes more than one parameters the next parameters are supposed to
+if indicator takes more than one parameter the next parameters are supposed to
 be enetered spaced with dashes:      
 **INDICATOR_NAME:PARAMS-PARAMS2-...**
 
 ## Installation
 
-Use the package manager [pip](https://pip.pypa.io/en/stable/) to install foobar.
+Use the package manager [pip](https://pip.pypa.io/en/stable/) to install stonkzilla.
 
 ```bash
 pip install stonkzilla
